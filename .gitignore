@@ -1,0 +1,7 @@
+/target
+config.json
+logs/
+go-cqhttp/
+logs
+go-cqhttp
+test.json

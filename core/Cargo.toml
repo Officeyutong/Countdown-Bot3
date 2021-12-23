@@ -1,0 +1,28 @@
+[package]
+name = "countdown-bot3"
+version = "0.1.0"
+authors = ["officeyutong <officeyutong@163.com>"]
+edition = "2018"
+build = "build.rs"
+
+[dependencies]
+
+config = "0.11.0"
+tokio = { version = "1.15.0", features = ["full"] }
+log = "0.4.14"
+flexi_logger = "0.22.0"
+serde = { version = "1.0.132", features = ["derive"] }
+libloading = "0.7.2"
+tokio-tungstenite = "0.16.1"
+httparse = "1.5.1"
+url = "2.2.2"
+sink = "0.1.0"
+futures-util = "0.3.19"
+serde_derive = "1.0.132"
+serde_json = "1.0.73"
+anyhow = "1.0.51"
+uuid = { version = "0.8.2", features = ["v4"] }
+
+[build-dependencies]
+rustc_version = "0.4.0"
+
