@@ -1,14 +1,15 @@
+pub mod handle;
 pub mod message;
+pub mod meta;
 pub mod notice;
 pub mod request;
-pub mod meta;
 use anyhow::anyhow;
 use message::MessageEvent;
 use serde::Deserialize;
 use serde_json::Value as JsonValue;
 
-use self::{notice::NoticeEvent, request::RequestEvent, meta::MetaEvent};
-#[derive(Deserialize, Debug)]
+use self::{meta::MetaEvent, notice::NoticeEvent, request::RequestEvent};
+#[derive(Deserialize, Debug, Clone)]
 pub enum Event {
     Message(MessageEvent),
     Notice(NoticeEvent),
@@ -16,7 +17,7 @@ pub enum Event {
     Meta(MetaEvent),
     Unknown,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct EventContainer {
     pub raw_value: JsonValue,
     pub time: u64,

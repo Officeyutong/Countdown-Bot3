@@ -3,3 +3,4 @@ pub mod config;
 pub mod plugin;
 pub mod event;
 pub mod client;
+pub mod command;

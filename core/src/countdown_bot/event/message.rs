@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use serde::Deserialize;
 use serde_json::Value as JsonValue;
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub enum MessageEvent {
     Private(PrivateMessageEvent),
     Group(GroupMessageEvent),
@@ -33,28 +33,28 @@ impl MessageEvent {
         }
     }
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum SenderSex {
     Male,
     Female,
-    Unknowm,
+    Unknown,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum PrivateMessageSubType {
     Friend,
     Group,
     Other,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct PrivateEventSender {
     pub user_id: Option<i64>,
     pub nickname: Option<String>,
     pub sex: Option<SenderSex>,
     pub age: Option<i32>,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct PrivateMessageEvent {
     // private
     pub message_type: String,
@@ -68,7 +68,7 @@ pub struct PrivateMessageEvent {
     pub sender: PrivateEventSender,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupMessageSubType {
     Normal,
@@ -76,7 +76,7 @@ pub enum GroupMessageSubType {
     Notice,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct GroupMessageEvent {
     pub message_type: String,
     pub sub_type: GroupMessageSubType,
@@ -89,14 +89,14 @@ pub struct GroupMessageEvent {
     pub font: i32,
     pub sender: GroupMessageSender,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct AnonymousData {
     pub id: i64,
     pub name: String,
     pub flag: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupSenderRole {
     Owner,
@@ -104,7 +104,7 @@ pub enum GroupSenderRole {
     Member,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct GroupMessageSender {
     pub user_id: Option<i64>,
     pub nickname: Option<String>,

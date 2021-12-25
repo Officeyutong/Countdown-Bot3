@@ -3,12 +3,15 @@ use serde::Deserialize;
 use serde_json::Value;
 use tokio::sync::{mpsc, oneshot};
 
+use super::event::message::MessageEvent;
+
 // pub type ReceiverMapWrapper = RefCell<ReceiverMap>;
 pub type RequestReceiver = mpsc::UnboundedReceiver<APICallRequest>;
 pub type RequestSender = mpsc::UnboundedSender<APICallRequest>;
 
 pub type SenderContainer = std::result::Result<Value, Box<dyn std::error::Error + Send>>;
 pub type SingleCallSender = oneshot::Sender<SenderContainer>;
+mod message;
 #[derive(Debug)]
 pub struct APICallRequest {
     pub token: String,
@@ -28,10 +31,8 @@ pub struct APICallResponse {
 pub struct CountdownBotClient {
     request_sender: RequestSender,
 }
-unsafe impl std::marker::Send for CountdownBotClient{
-
-}
-impl<'a> CountdownBotClient {
+unsafe impl std::marker::Send for CountdownBotClient {}
+impl CountdownBotClient {
     pub fn new(request_sender: RequestSender) -> CountdownBotClient {
         CountdownBotClient { request_sender }
     }
@@ -55,6 +56,16 @@ impl<'a> CountdownBotClient {
                 Err(e) => return Err(e),
             },
             Err(e) => return Err(Box::new(e)),
+        }
+    }
+}
+
+impl CountdownBotClient {
+    pub async fn quick_send(&self, evt: &MessageEvent, _text: &String) {
+        match evt {
+            MessageEvent::Private(_) => {}
+            MessageEvent::Group(_) => {}
+            MessageEvent::Unknown => {}
         }
     }
 }

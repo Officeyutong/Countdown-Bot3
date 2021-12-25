@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use serde::Deserialize;
 use serde_json::{from_value, Value};
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub enum MetaEvent {
     Lifecycle(LifecycleEvent),
     Heartbeat(HeartbeatEvent),
@@ -33,19 +33,19 @@ impl MetaEvent {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct HeartbeatEvent {
     pub interval: i64,
     pub status: Value,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum LifecycleEventSubType {
     Enable,
     Disable,
     Connect,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct LifecycleEvent {
     pub sub_type: LifecycleEventSubType,
 }

@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use serde::Deserialize;
 use serde_json::{from_value, Value};
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub enum RequestEvent {
     FriendRequest(FriendRequestEvent),
     GroupRequest(GroupRequestEvent),
@@ -33,19 +33,19 @@ impl RequestEvent {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct FriendRequestEvent {
     pub user_id: i64,
     pub comment: String,
     pub flag: String,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupRequestSubType {
     Add,
     Invite,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct GroupRequestEvent {
     pub sub_type: GroupRequestSubType,
     pub group_id: i64,

@@ -3,7 +3,7 @@ use std::error::Error;
 use anyhow::anyhow;
 use serde::Deserialize;
 use serde_json::{from_value, Value};
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub enum NoticeEvent {
     GroupFileUpload(GroupFileUploadEvent),
     GroupAdminChange(GroupAdminChangeEvent),
@@ -65,13 +65,13 @@ impl NoticeEvent {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct GroupFileUploadEvent {
     pub group_id: i64,
     pub user_id: i64,
     pub file: GroupFileInfo,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct GroupFileInfo {
     pub id: String,
     pub name: String,
@@ -79,40 +79,40 @@ pub struct GroupFileInfo {
     pub busid: i64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupAdminChangeSubType {
     Set,
     Unset,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct GroupAdminChangeEvent {
     pub sub_type: GroupAdminChangeSubType,
     pub group_id: i64,
     pub user_id: i64,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupMembersReduceSubType {
     Leave,
     Kick,
     KickMe,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct GroupMembersReduceEvent {
     pub sub_type: GroupMembersReduceSubType,
     pub group_id: i64,
     pub operator_id: i64,
     pub user_id: i64,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupMembersIncreaseSubtype {
     Approve,
     Invite,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct GroupMembersIncreaseEvent {
     pub sub_type: GroupMembersIncreaseSubtype,
     pub group_id: i64,
@@ -120,14 +120,14 @@ pub struct GroupMembersIncreaseEvent {
     pub user_id: i64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupMuteSubType {
     Ban,
     LiftBan,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct GroupMuteEvent {
     pub sub_type: GroupMuteSubType,
     pub group_id: i64,
@@ -136,12 +136,12 @@ pub struct GroupMuteEvent {
     pub duration: i64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct FriendAddEvent {
     pub user_id: i64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct GroupMessageRecallEvent {
     pub group_id: i64,
     pub user_id: i64,
@@ -149,33 +149,33 @@ pub struct GroupMessageRecallEvent {
     pub message_id: i64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct FriendMessageRecallEvent {
     pub user_id: i64,
     pub message_id: i64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct GroupPokeEvent {
     pub group_id: i64,
     pub user_id: i64,
     pub target_id: i64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct GroupRedbagLuckKingEvent {
     pub group_id: i64,
     pub user_id: i64,
     pub target_id: i64,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupMemberHonorChangeSubType {
     Talkative,
     Performer,
     Emotion,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct GroupMemberHonorChangeEvent {
     pub group_id: i64,
     pub honor_type: GroupMemberHonorChangeSubType,
