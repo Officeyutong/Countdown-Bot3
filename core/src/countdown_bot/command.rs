@@ -13,7 +13,6 @@ pub struct Command {
     pub group_enabled: bool,
     pub private_enabled: bool,
     pub console_enabled: bool,
-    pub async_command: bool,
 }
 
 impl Command {
@@ -26,14 +25,13 @@ impl Command {
             group_enabled: false,
             private_enabled: false,
             console_enabled: false,
-            async_command: false,
         }
     }
-    pub fn set_async(self, v: bool) -> Self {
-        let mut t = Command::from(self);
-        t.async_command = v;
-        return t;
-    }
+    // pub fn set_async(self, v: bool) -> Self {
+    //     let mut t = Command::from(self);
+    //     t.async_command = v;
+    //     return t;
+    // }
     pub fn single_alias(self, s: &str) -> Self {
         let mut t = Command::from(self);
         t.alias.push(String::from(s));

@@ -35,4 +35,25 @@ impl CountdownBotClient {
             Err(e) => Err(e),
         };
     }
+    pub async fn send_group_message(
+        &self,
+        group_id: i64,
+        message: &String,
+        auto_escape: bool,
+    ) -> Result<MessageIdResp, Box<dyn std::error::Error>> {
+        let resp = self
+            .call(
+                "send_group_msg",
+                &json!({
+                    "group_id": group_id,
+                    "message": message.clone(),
+                    "auto_escape": auto_escape
+                }),
+            )
+            .await;
+        return match resp {
+            Ok(o) => Ok(serde_json::from_value::<MessageIdResp>(o)?),
+            Err(e) => Err(e),
+        };
+    }
 }

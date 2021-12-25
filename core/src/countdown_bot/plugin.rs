@@ -1,4 +1,5 @@
 use super::bot;
+use super::client::CountdownBotClient;
 use super::command::SenderType;
 use super::event::EventContainer;
 use libloading::Library;
@@ -31,7 +32,7 @@ pub trait BotPlugin {
     ) -> std::result::Result<(), Box<dyn std::error::Error>>;
     fn get_meta(&self) -> PluginMeta;
     async fn on_event(&mut self, event: EventContainer) -> bool;
-    async fn on_command(&mut self, command: String, args: Vec<String>, sender: SenderType);
+    async fn on_command(&mut self, command: String, args: Vec<String>, sender: SenderType, client: CountdownBotClient);
 }
 
 pub struct PluginDeclaration {

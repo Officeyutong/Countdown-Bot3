@@ -1,9 +1,11 @@
-use log::debug;
+use log::{debug, info};
 use serde::Deserialize;
 use serde_json::Value;
 use tokio::sync::{mpsc, oneshot};
 
-use super::event::message::MessageEvent;
+use self::message::MessageIdResp;
+
+use super::{command::SenderType, event::message::MessageEvent};
 
 // pub type ReceiverMapWrapper = RefCell<ReceiverMap>;
 pub type RequestReceiver = mpsc::UnboundedReceiver<APICallRequest>;
@@ -61,11 +63,32 @@ impl CountdownBotClient {
 }
 
 impl CountdownBotClient {
-    pub async fn quick_send(&self, evt: &MessageEvent, _text: &String) {
+    pub async fn quick_send(
+        &self,
+        evt: &MessageEvent,
+        text: &String,
+    ) -> Result<MessageIdResp, Box<dyn std::error::Error>> {
         match evt {
-            MessageEvent::Private(_) => {}
-            MessageEvent::Group(_) => {}
-            MessageEvent::Unknown => {}
+            MessageEvent::Private(evt) => {
+                self.send_private_message(evt.sender.user_id.unwrap(), text, false)
+                    .await
+            }
+            MessageEvent::Group(evt) => self.send_group_message(evt.group_id, text, false).await,
+            MessageEvent::Unknown => Err(Box::from(anyhow::anyhow!("Invalid message event type"))),
+        }
+    }
+    pub async fn quick_send_by_sender(
+        &self,
+        sender: &SenderType,
+        text: &String,
+    ) -> Result<MessageIdResp, Box<dyn std::error::Error>> {
+        match sender {
+            SenderType::Console(_) => {
+                info!("{}", text);
+                Ok(MessageIdResp { message_id: -1 })
+            }
+            SenderType::Private(evt) => self.quick_send(&MessageEvent::Private(evt.clone()), text).await,
+            SenderType::Group(evt) => self.quick_send(&MessageEvent::Group(evt.clone()), text).await,
         }
     }
 }

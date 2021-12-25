@@ -1,17 +1,17 @@
-#[allow(improper_ctypes_definitions)]
 
 use std::sync::Arc;
 
 use countdown_bot3::countdown_bot::{
+    client::CountdownBotClient,
     command::{Command, SenderType},
     event::{Event, EventContainer},
     plugin::{self, PluginMeta},
 };
-use log::{debug, info};
+use log::debug;
 use plugin::PluginRegistrar;
 use tokio::sync::Mutex;
 static PLUGIN_NAME: &str = "demo";
-pub struct DemoPlugin;
+pub struct DemoPlugin {}
 
 #[async_trait::async_trait]
 impl plugin::BotPlugin for DemoPlugin {
@@ -21,7 +21,23 @@ impl plugin::BotPlugin for DemoPlugin {
         }
         return true;
     }
-    async fn on_command(&mut self, _command: String, _args: Vec<String>, _sender: SenderType) {}
+    async fn on_command(
+        &mut self,
+        command: String,
+        args: Vec<String>,
+        sender: SenderType,
+        client: CountdownBotClient,
+    ) {
+        match command.as_str() {
+            "test_command" => {
+                client
+                    .quick_send_by_sender(&sender, &format!("{:?}", args))
+                    .await
+                    .ok();
+            }
+            _ => {}
+        };
+    }
     fn on_enable(
         &mut self,
         bot: &mut countdown_bot3::countdown_bot::bot::CountdownBot,
@@ -34,10 +50,8 @@ impl plugin::BotPlugin for DemoPlugin {
                 .description("qaqqaqqwq")
                 .group(true)
                 .private(true)
-                .console(false),
+                .console(true),
         )?;
-        // return Err(Box::new(anyhow!("qaqqaq")));
-        info!("Command registered!");
         return Ok(());
     }
 
@@ -57,6 +71,7 @@ impl plugin::BotPlugin for DemoPlugin {
     }
 }
 countdown_bot3::export_plugin!(register, PLUGIN_NAME);
+#[allow(improper_ctypes_definitions)]
 extern "C" fn register(registrar: &mut dyn PluginRegistrar) {
-    registrar.register_plugin(Arc::new(Mutex::new(DemoPlugin)));
+    registrar.register_plugin(Arc::new(Mutex::new(DemoPlugin{})));
 }
