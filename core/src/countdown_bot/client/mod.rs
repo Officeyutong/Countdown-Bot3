@@ -1,5 +1,5 @@
 use log::{debug, info};
-use serde::Deserialize;
+use serde::{Deserialize, de::DeserializeOwned};
 use serde_json::Value;
 use tokio::sync::{mpsc, oneshot};
 
@@ -13,7 +13,16 @@ pub type RequestSender = mpsc::UnboundedSender<APICallRequest>;
 
 pub type SenderContainer = std::result::Result<Value, Box<dyn std::error::Error + Send>>;
 pub type SingleCallSender = oneshot::Sender<SenderContainer>;
-mod message;
+pub type ResultType<T> = Result<T, Box<dyn std::error::Error>>;
+
+pub fn create_result<T: DeserializeOwned>(resp: ResultType<Value>) -> ResultType<T> {
+    return match resp {
+        Ok(o) => Ok(serde_json::from_value::<T>(o)?),
+        Err(e) => Err(e),
+    };
+}
+
+
 #[derive(Debug)]
 pub struct APICallRequest {
     pub token: String,
@@ -70,10 +79,10 @@ impl CountdownBotClient {
     ) -> Result<MessageIdResp, Box<dyn std::error::Error>> {
         match evt {
             MessageEvent::Private(evt) => {
-                self.send_private_message(evt.sender.user_id.unwrap(), text, false)
+                self.send_private_msg(evt.sender.user_id.unwrap(), text, false)
                     .await
             }
-            MessageEvent::Group(evt) => self.send_group_message(evt.group_id, text, false).await,
+            MessageEvent::Group(evt) => self.send_group_msg(evt.group_id, text, false).await,
             MessageEvent::Unknown => Err(Box::from(anyhow::anyhow!("Invalid message event type"))),
         }
     }
@@ -91,4 +100,28 @@ impl CountdownBotClient {
             SenderType::Group(evt) => self.quick_send(&MessageEvent::Group(evt.clone()), text).await,
         }
     }
+}
+
+mod message;
+mod misc;
+mod group;
+
+
+#[macro_export]
+macro_rules! declare_api_call {
+    ($name:ident,$ret:ty, $(($x:ident,$y:ty)),*) => {
+        pub async fn $name(
+            &self,
+            $($x:$y,)*
+        )->$crate::countdown_bot::client::ResultType<$ret> {
+            $crate::countdown_bot::client::create_result(
+                self.call(
+                    stringify!($name),
+                    &serde_json::json!({
+                        $(stringify!($x):$x,)*
+                    })
+                ).await
+            )
+        }
+    };
 }

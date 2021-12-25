@@ -26,13 +26,19 @@ pub trait BotPlugin {
         &mut self,
         bot: &mut bot::CountdownBot,
     ) -> std::result::Result<(), Box<dyn std::error::Error>>;
-    fn on_disable(
+    async fn on_disable(
         &mut self,
-        bot: &mut bot::CountdownBot,
+        client: CountdownBotClient,
     ) -> std::result::Result<(), Box<dyn std::error::Error>>;
     fn get_meta(&self) -> PluginMeta;
     async fn on_event(&mut self, event: EventContainer) -> bool;
-    async fn on_command(&mut self, command: String, args: Vec<String>, sender: SenderType, client: CountdownBotClient);
+    async fn on_command(
+        &mut self,
+        command: String,
+        args: Vec<String>,
+        sender: SenderType,
+        client: CountdownBotClient,
+    );
 }
 
 pub struct PluginDeclaration {

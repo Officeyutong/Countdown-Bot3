@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use anyhow::anyhow;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{from_value, Value};
 
 #[derive(Deserialize, Debug, Clone)]
@@ -39,7 +39,7 @@ pub struct FriendRequestEvent {
     pub comment: String,
     pub flag: String,
 }
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupRequestSubType {
     Add,

@@ -1,5 +1,5 @@
 
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use countdown_bot3::countdown_bot::{
     client::CountdownBotClient,
@@ -28,6 +28,7 @@ impl plugin::BotPlugin for DemoPlugin {
         sender: SenderType,
         client: CountdownBotClient,
     ) {
+        
         match command.as_str() {
             "test_command" => {
                 client
@@ -55,10 +56,11 @@ impl plugin::BotPlugin for DemoPlugin {
         return Ok(());
     }
 
-    fn on_disable(
+    async fn on_disable(
         &mut self,
-        _bot: &mut countdown_bot3::countdown_bot::bot::CountdownBot,
+        _client: CountdownBotClient
     ) -> Result<(), Box<(dyn std::error::Error)>> {
+        tokio::time::sleep(Duration::from_secs(4)).await;
         return Ok(());
     }
 

@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::path;
+use std::time::Duration;
 pub type ReceiverMap = std::collections::HashMap<String, SingleCallSender>;
 use super::client::{CountdownBotClient, SingleCallSender};
 use super::command::{Command, CommandManager};
@@ -7,7 +8,7 @@ use super::config::CountdownBotConfig;
 use super::plugin::PluginManager;
 use config::Config;
 use futures_util::stream::{SplitSink, SplitStream};
-use log::{debug, info};
+use log::{debug, error, info};
 use tokio_tungstenite::{tungstenite::Message, MaybeTlsStream, WebSocketStream};
 pub type WriteStreamType =
     Option<SplitSink<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>, Message>>;
@@ -123,8 +124,20 @@ impl CountdownBot {
         self.init_inner_commands();
         return Ok(());
     }
-    fn shutdown(&mut self) {
+    async fn shutdown(&mut self) {
         info!("Stopping main selector...");
+        for (name, plugin) in self.plugin_manager.plugins.iter() {
+            let locked_1 = plugin.lock().await;
+            let mut locked = locked_1.plugin.lock().await;
+            // locked.on_disable().
+            if let Err(e) = tokio::time::timeout(Duration::from_secs(3), locked.on_disable(self.create_client())).await
+            {
+                error!(
+                    "{}: Spent more than 3s in on_disable, killing it..\n{}",
+                    name, e
+                );
+            }
+        }
         self.stop = true;
         std::process::exit(0);
     }
@@ -150,6 +163,20 @@ impl CountdownBot {
         self.register_command(
             Command::new("test")
                 .console(true)
+                .with_plugin_name(&String::from("<bot>")),
+        )
+        .ok();
+        self.register_command(
+            Command::new("server_status")
+                .console(true)
+                .description("查询onebot服务端状态")
+                .with_plugin_name(&String::from("<bot>")),
+        )
+        .ok();
+        self.register_command(
+            Command::new("server_version")
+                .console(true)
+                .description("查询onebot服务端版本")
                 .with_plugin_name(&String::from("<bot>")),
         )
         .ok();

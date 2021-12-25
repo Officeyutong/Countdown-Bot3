@@ -1,16 +1,25 @@
 use std::sync::Arc;
 
-use log::debug;
+use log::{debug, info};
 
 use crate::countdown_bot::command::{Command, SenderType};
 
 use super::CountdownBot;
 
 impl CountdownBot {
+    pub async fn on_command_server_status(&mut self, _sender: &SenderType) {
+        let val = self.create_client().get_status().await.unwrap();
+        info!("{:#?}", val);
+    }
+    pub async fn on_command_server_version(&mut self, _sender: &SenderType) {
+        let val = self.create_client().get_version_info().await.unwrap();
+        info!("{:#?}", val);
+    }
+    
     pub async fn on_command_test(&mut self, _sender: &SenderType) {
         let resp = self
             .create_client()
-            .send_private_message(814980678, &String::from("qaqqaq"), true)
+            .send_private_msg(814980678, &String::from("qaqqaq"), true)
             .await;
         debug!("{:?}", resp);
     }
@@ -47,6 +56,8 @@ impl CountdownBot {
             "help" => self.on_command_help(&sender).await,
             "stop" => self.on_command_stop(&sender).await,
             "test" => self.on_command_test(&sender).await,
+            "server_status" => self.on_command_server_status(&sender).await,
+            "server_version" => self.on_command_server_version(&sender).await,
             _ => {}
         };
     }

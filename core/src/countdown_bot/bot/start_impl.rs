@@ -165,7 +165,7 @@ impl CountdownBot {
                             }
                             _   = stop_rx.changed() => {
                                 if *stop_rx.borrow() {
-                                    self.shutdown();
+                                    self.shutdown().await;
                                 }
                             }
                             Some(result) = self.read_stream.as_mut().unwrap().next() => {
