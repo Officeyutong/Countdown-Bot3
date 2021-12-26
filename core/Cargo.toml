@@ -1,6 +1,6 @@
 [package]
 name = "countdown-bot3"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["officeyutong <officeyutong@163.com>"]
 edition = "2018"
 build = "build.rs"
@@ -24,6 +24,7 @@ anyhow = "1.0.51"
 uuid = { version = "0.8.2", features = ["v4"] }
 async-trait = "0.1.52"
 tokio-read-line = "0.1.0"
+chrono = "0.4.19"
 
 [build-dependencies]
 rustc_version = "0.4.0"

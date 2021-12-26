@@ -1,32 +1,65 @@
 use std::sync::Arc;
 
-use log::{debug, info};
+use log::info;
 
 use crate::countdown_bot::command::{Command, SenderType};
 
 use super::CountdownBot;
 
 impl CountdownBot {
-    pub async fn on_command_server_status(&mut self, _sender: &SenderType) {
+    pub async fn on_command_about(
+        &mut self,
+        sender: &SenderType,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        self.create_client()
+            .quick_send_by_sender(
+                &sender,
+                r#"Countdown-Bot 3
+By MikuNotFoundException
+https://github.com/Officeyutong/Countdown-Bot3"#,
+            )
+            .await
+            .ok();
+        Ok(())
+    }
+    pub async fn on_command_status(
+        &mut self,
+        sender: &SenderType,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let state_str = self.state_manager.create_state(&self.plugin_manager).await;
+        self.create_client()
+            .quick_send_by_sender(&sender, &state_str)
+            .await
+            .ok();
+        Ok(())
+    }
+    pub async fn on_command_server_status(
+        &mut self,
+        _sender: &SenderType,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let val = self.create_client().get_status().await.unwrap();
         info!("{:#?}", val);
+        Ok(())
     }
-    pub async fn on_command_server_version(&mut self, _sender: &SenderType) {
+    pub async fn on_command_server_version(
+        &mut self,
+        _sender: &SenderType,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let val = self.create_client().get_version_info().await.unwrap();
         info!("{:#?}", val);
+        Ok(())
     }
-    
-    pub async fn on_command_test(&mut self, _sender: &SenderType) {
-        let resp = self
-            .create_client()
-            .send_private_msg(814980678, &String::from("qaqqaq"), true)
-            .await;
-        debug!("{:?}", resp);
-    }
-    pub async fn on_command_stop(&mut self, _sender: &SenderType) {
+    pub async fn on_command_stop(
+        &mut self,
+        _sender: &SenderType,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         self.stop_signal_sender.as_ref().unwrap().send(true).ok();
+        Ok(())
     }
-    pub async fn on_command_help(&mut self, sender: &SenderType) {
+    pub async fn on_command_help(
+        &mut self,
+        sender: &SenderType,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let mut buf = String::from("指令列表:\n");
         let cmds = self
             .command_manager
@@ -50,15 +83,24 @@ impl CountdownBot {
             .quick_send_by_sender(&sender, &buf)
             .await
             .ok();
+        Ok(())
     }
-    pub async fn on_command(&mut self, command: String, _args: Vec<String>, sender: SenderType) {
+    pub async fn on_command(
+        &mut self,
+        command: String,
+        _args: Vec<String>,
+        sender: SenderType,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         match command.as_str() {
             "help" => self.on_command_help(&sender).await,
             "stop" => self.on_command_stop(&sender).await,
-            "test" => self.on_command_test(&sender).await,
             "server_status" => self.on_command_server_status(&sender).await,
             "server_version" => self.on_command_server_version(&sender).await,
-            _ => {}
-        };
+            "status" => self.on_command_status(&sender).await,
+            "about" => self.on_command_about(&sender).await,
+            _ => {
+                panic!("?")
+            }
+        }
     }
 }

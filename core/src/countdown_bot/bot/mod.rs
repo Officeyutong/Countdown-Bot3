@@ -6,6 +6,8 @@ use super::client::{CountdownBotClient, SingleCallSender};
 use super::command::{Command, CommandManager};
 use super::config::CountdownBotConfig;
 use super::plugin::PluginManager;
+use super::schedule_loop::ScheduleLoopManager;
+use super::state_hook::StateHookManager;
 use config::Config;
 use futures_util::stream::{SplitSink, SplitStream};
 use log::{debug, error, info};
@@ -14,6 +16,7 @@ pub type WriteStreamType =
     Option<SplitSink<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>, Message>>;
 pub type ReadStreamType =
     Option<SplitStream<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>>>;
+pub type StopSignalReceiverType = tokio::sync::watch::Receiver<bool>;
 pub static CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub static RUSTC_VERSION: &str = env!("RUSTC_VERSION");
 pub static PRESERVED_PLUGIN_NAMES: [&str; 1] = ["<bot>"];
@@ -30,9 +33,11 @@ pub struct CountdownBot {
     // receiver_map: ReceiverMap,
     client: Option<CountdownBotClient>,
     stop_signal_sender: Option<tokio::sync::watch::Sender<bool>>,
-    stop_signal_receiver: Option<tokio::sync::watch::Receiver<bool>>,
+    stop_signal_receiver: Option<StopSignalReceiverType>,
     command_manager: CommandManager,
     preserved_plugin_names: HashSet<String>,
+    state_manager: StateHookManager,
+    schedule_loop_manager: ScheduleLoopManager,
 }
 mod builtin_command_impl;
 mod dispatch_impl;
@@ -42,7 +47,9 @@ impl CountdownBot {
     pub fn create_client(&self) -> CountdownBotClient {
         return self.client.as_ref().unwrap().clone();
     }
-
+    pub fn register_schedule(&mut self, time: (u32, u32), name: String) {
+        self.schedule_loop_manager.register(time, name);
+    }
     pub fn register_command(&mut self, cmd: Command) -> Result<(), Box<(dyn std::error::Error)>> {
         return self.command_manager.register_command(cmd);
     }
@@ -62,6 +69,9 @@ impl CountdownBot {
     //     let s = self.plugin_manager.plugins.get(name);
     //     return s.unwrap().blocking_lock().plugin.clone();
     // }
+    pub fn register_state_hook(&mut self) {
+        self.state_manager.register_state_hook();
+    }
     pub fn new(sys_root: &path::PathBuf) -> CountdownBot {
         CountdownBot {
             sys_root: sys_root.clone(),
@@ -78,6 +88,8 @@ impl CountdownBot {
             stop_signal_receiver: None,
             command_manager: CommandManager::new(),
             preserved_plugin_names: HashSet::from(PRESERVED_PLUGIN_NAMES.map(|x| String::from(x))),
+            state_manager: StateHookManager::default(),
+            schedule_loop_manager: ScheduleLoopManager::new(),
         }
     }
     pub async fn init(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -126,11 +138,11 @@ impl CountdownBot {
     }
     async fn shutdown(&mut self) {
         info!("Stopping main selector...");
-        for (name, plugin) in self.plugin_manager.plugins.iter() {
-            let locked_1 = plugin.lock().await;
-            let mut locked = locked_1.plugin.lock().await;
+        for (name, plugin_wrapper) in self.plugin_manager.plugins.iter() {
+            // let locked_1 = plugin.lock().await;
+            let mut locked = plugin_wrapper.plugin_instance.lock().await;
             // locked.on_disable().
-            if let Err(e) = tokio::time::timeout(Duration::from_secs(3), locked.on_disable(self.create_client())).await
+            if let Err(e) = tokio::time::timeout(Duration::from_secs(3), locked.on_disable()).await
             {
                 error!(
                     "{}: Spent more than 3s in on_disable, killing it..\n{}",
@@ -139,6 +151,7 @@ impl CountdownBot {
             }
         }
         self.stop = true;
+        tokio::time::sleep(Duration::from_millis(500)).await;
         std::process::exit(0);
     }
     fn init_inner_commands(&mut self) {
@@ -161,12 +174,6 @@ impl CountdownBot {
         )
         .ok();
         self.register_command(
-            Command::new("test")
-                .console(true)
-                .with_plugin_name(&String::from("<bot>")),
-        )
-        .ok();
-        self.register_command(
             Command::new("server_status")
                 .console(true)
                 .description("查询onebot服务端状态")
@@ -177,6 +184,24 @@ impl CountdownBot {
             Command::new("server_version")
                 .console(true)
                 .description("查询onebot服务端版本")
+                .with_plugin_name(&String::from("<bot>")),
+        )
+        .ok();
+        self.register_command(
+            Command::new("status")
+                .console(true)
+                .private(true)
+                .group(true)
+                .description("查询Bot运行状态")
+                .with_plugin_name(&String::from("<bot>")),
+        )
+        .ok();
+        self.register_command(
+            Command::new("about")
+                .console(true)
+                .private(true)
+                .group(true)
+                .description("关于此Bot")
                 .with_plugin_name(&String::from("<bot>")),
         )
         .ok();

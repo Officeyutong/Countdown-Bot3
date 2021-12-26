@@ -5,6 +5,7 @@ use crate::countdown_bot::bot::ReceiverMap;
 use crate::countdown_bot::client::{APICallRequest, APICallResponse, CountdownBotClient};
 use crate::countdown_bot::command::{CommandSender, ConsoleSender};
 use crate::countdown_bot::event::EventContainer;
+use crate::countdown_bot::plugin::PluginWrapperArc;
 use anyhow::anyhow;
 use futures_util::{SinkExt, StreamExt};
 use log::{error, info, trace};
@@ -42,6 +43,8 @@ impl CountdownBot {
         let (stop_tx, stop_rx) = tokio::sync::watch::channel::<bool>(false);
         self.stop_signal_sender = Some(stop_tx);
         self.stop_signal_receiver = Some(stop_rx.clone());
+        self.schedule_loop_manager
+            .set_stop_signal_receiver(stop_rx.clone());
         let (console_tx, mut console_rx) = mpsc::unbounded_channel::<String>();
         {
             use tokio::io::{AsyncBufReadExt, BufReader};
@@ -65,6 +68,23 @@ impl CountdownBot {
                     }
                 }
             });
+        }
+
+        self.client = Some(CountdownBotClient::new(call_tx.clone()));
+        {
+            for wrapper in self
+                .plugin_manager
+                .plugins
+                .iter()
+                .map(|x| x.1.clone())
+                .collect::<Vec<PluginWrapperArc>>()
+            {
+                wrapper.plugin_instance.lock().await.on_before_start(self)?;
+            }
+        }
+        {
+            let loop_manager = self.schedule_loop_manager.clone();
+            tokio::spawn(loop_manager.run());
         }
         {
             let local_stop_rx = stop_rx.clone();
@@ -122,7 +142,7 @@ impl CountdownBot {
                                             {
                                                 if let Some(r) = receiver_map.remove(&req.token){
                                                     if let Ok(_) = r.send(Err(Box::from(anyhow!("Sending error! {}", err)))){
-    
+
                                                     }
                                                 }
                                             }
@@ -143,7 +163,6 @@ impl CountdownBot {
                 }
             });
         }
-        self.client = Some(CountdownBotClient::new(call_tx.clone()));
         while !self.stop {
             match connect_async(url_event.clone()).await {
                 Ok((stream, resp)) => {

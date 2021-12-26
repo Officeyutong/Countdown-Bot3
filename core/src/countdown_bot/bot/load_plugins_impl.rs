@@ -1,7 +1,6 @@
 use super::CountdownBot;
 use crate::countdown_bot::plugin::PluginWrapper;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 
 use log::{debug, error, info};
 
@@ -49,7 +48,7 @@ impl CountdownBot {
                 error!("{}", e);
             }
         }
-        let mut plugins: Vec<(String, Arc<Mutex<PluginWrapper>>)> = vec![];
+        let mut plugins: Vec<(String, Arc<PluginWrapper>)> = vec![];
         for (name, plugin) in self.plugin_manager.plugins.iter() {
             if self.preserved_plugin_names.contains(name) {
                 panic!("Preserved plugin name: {}", name);
@@ -58,13 +57,15 @@ impl CountdownBot {
         }
         for (name, plugin) in plugins.iter() {
             info!("Loading {}", name);
+            self.state_manager.set_curr_plugin(name.clone());
             self.command_manager.update_plugin_name(name.clone());
-            let plugin_locked = plugin.lock().await;
-            if let Err(e) = plugin_locked.plugin.lock().await.on_enable(self) {
+            self.schedule_loop_manager.set_current_plugin(plugin.plugin_instance.clone());
+            // let plugin_locked = plugin.lock().await;
+            if let Err(e) = plugin.plugin_instance.lock().await.on_enable(self) {
                 error!("Error enablng: {}", name);
                 error!("{}", e);
             } else {
-                info!("Loaded: name={}, meta={:?}", name, plugin_locked.meta);
+                info!("Loaded: name={}, meta={:?}", name, plugin.meta);
             };
         }
         info!(

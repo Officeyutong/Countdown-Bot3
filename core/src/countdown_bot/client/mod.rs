@@ -1,5 +1,5 @@
-use log::{debug, info};
-use serde::{Deserialize, de::DeserializeOwned};
+use log::{info, trace};
+use serde::{de::DeserializeOwned, Deserialize};
 use serde_json::Value;
 use tokio::sync::{mpsc, oneshot};
 
@@ -7,7 +7,6 @@ use self::message::MessageIdResp;
 
 use super::{command::SenderType, event::message::MessageEvent};
 
-// pub type ReceiverMapWrapper = RefCell<ReceiverMap>;
 pub type RequestReceiver = mpsc::UnboundedReceiver<APICallRequest>;
 pub type RequestSender = mpsc::UnboundedSender<APICallRequest>;
 
@@ -21,7 +20,6 @@ pub fn create_result<T: DeserializeOwned>(resp: ResultType<Value>) -> ResultType
         Err(e) => Err(e),
     };
 }
-
 
 #[derive(Debug)]
 pub struct APICallRequest {
@@ -54,7 +52,7 @@ impl CountdownBotClient {
     ) -> Result<Value, Box<dyn std::error::Error>> {
         let (tx, rx) = oneshot::channel::<SenderContainer>();
         let token = uuid::Uuid::new_v4().to_string();
-        debug!("Performing api calling: {}, params: {}", action, params);
+        trace!("Performing api calling: {}, params: {}", action, params);
         self.request_sender.send(APICallRequest {
             action: String::from(action),
             payload: params.clone(),
@@ -75,7 +73,7 @@ impl CountdownBotClient {
     pub async fn quick_send(
         &self,
         evt: &MessageEvent,
-        text: &String,
+        text: &str,
     ) -> Result<MessageIdResp, Box<dyn std::error::Error>> {
         match evt {
             MessageEvent::Private(evt) => {
@@ -89,23 +87,28 @@ impl CountdownBotClient {
     pub async fn quick_send_by_sender(
         &self,
         sender: &SenderType,
-        text: &String,
+        text: &str,
     ) -> Result<MessageIdResp, Box<dyn std::error::Error>> {
         match sender {
             SenderType::Console(_) => {
                 info!("{}", text);
                 Ok(MessageIdResp { message_id: -1 })
             }
-            SenderType::Private(evt) => self.quick_send(&MessageEvent::Private(evt.clone()), text).await,
-            SenderType::Group(evt) => self.quick_send(&MessageEvent::Group(evt.clone()), text).await,
+            SenderType::Private(evt) => {
+                self.quick_send(&MessageEvent::Private(evt.clone()), text)
+                    .await
+            }
+            SenderType::Group(evt) => {
+                self.quick_send(&MessageEvent::Group(evt.clone()), text)
+                    .await
+            }
         }
     }
 }
 
+mod group;
 mod message;
 mod misc;
-mod group;
-
 
 #[macro_export]
 macro_rules! declare_api_call {

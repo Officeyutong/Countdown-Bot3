@@ -30,9 +30,7 @@ impl CountdownBot {
             }
         }
         for (_, val) in self.plugin_manager.plugins.iter() {
-            val.lock()
-                .await
-                .plugin
+            val.plugin_instance
                 .clone()
                 .lock()
                 .await
@@ -68,15 +66,26 @@ impl CountdownBot {
                 Ok(cmd) => {
                     if enable_checker(&cmd) {
                         if cmd.plugin_name.as_ref().unwrap() == "<bot>" {
-                            self.on_command(
-                                cmd.command_name.clone(),
-                                splitted
-                                    .iter()
-                                    .map(|x| String::from(*x))
-                                    .collect::<Vec<String>>(),
-                                parsed_sender.clone(),
-                            )
-                            .await;
+                            let call_result = self
+                                .on_command(
+                                    cmd.command_name.clone(),
+                                    splitted
+                                        .iter()
+                                        .map(|x| String::from(*x))
+                                        .collect::<Vec<String>>(),
+                                    parsed_sender.clone(),
+                                )
+                                .await;
+                            if let Err(e) = call_result {
+                                self.create_client()
+                                    .quick_send_by_sender(
+                                        &parsed_sender,
+                                        format!("执行指令时发生错误:\n{}", e).as_str(),
+                                    )
+                                    .await
+                                    .ok();
+                                error!("{:#?}", e);
+                            }
                         } else {
                             let cmd_local = cmd.clone();
                             let plugin = (self)
@@ -84,6 +93,8 @@ impl CountdownBot {
                                 .plugins
                                 .get(cmd_local.plugin_name.as_ref().unwrap())
                                 .unwrap()
+                                .clone()
+                                .plugin_instance
                                 .clone();
                             let cmd_name = cmd.command_name.clone();
                             let args = splitted
@@ -93,14 +104,22 @@ impl CountdownBot {
                             let sender_cloned = parsed_sender.clone();
                             let client_cloned = self.create_client();
                             tokio::spawn(async move {
-                                plugin
+                                let local_sender = sender_cloned;
+                                let call_ret = plugin
                                     .lock()
                                     .await
-                                    .plugin
-                                    .lock()
-                                    .await
-                                    .on_command(cmd_name, args, sender_cloned, client_cloned)
+                                    .on_command(cmd_name, args, &local_sender)
                                     .await;
+                                if let Err(e) = call_ret {
+                                    error!("{:#?}", e);
+                                    client_cloned
+                                        .quick_send_by_sender(
+                                            &local_sender,
+                                            format!("执行指令时发生错误:\n{}", &e).as_str(),
+                                        )
+                                        .await
+                                        .ok();
+                                }
                             });
                         }
                         Ok(())

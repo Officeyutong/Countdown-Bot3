@@ -1,5 +1,4 @@
 use super::bot;
-use super::client::CountdownBotClient;
 use super::command::SenderType;
 use super::event::EventContainer;
 use libloading::Library;
@@ -26,19 +25,21 @@ pub trait BotPlugin {
         &mut self,
         bot: &mut bot::CountdownBot,
     ) -> std::result::Result<(), Box<dyn std::error::Error>>;
-    async fn on_disable(
+    fn on_before_start(
         &mut self,
-        client: CountdownBotClient,
+        bot: &mut bot::CountdownBot,
     ) -> std::result::Result<(), Box<dyn std::error::Error>>;
+    async fn on_disable(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>>;
     fn get_meta(&self) -> PluginMeta;
     async fn on_event(&mut self, event: EventContainer) -> bool;
     async fn on_command(
         &mut self,
         command: String,
         args: Vec<String>,
-        sender: SenderType,
-        client: CountdownBotClient,
-    );
+        sender: &SenderType,
+    ) -> Result<(), Box<dyn std::error::Error + Send>>;
+    async fn on_state_hook(&mut self) -> String;
+    async fn on_schedule_loop(&mut self, name: &str);
 }
 
 pub struct PluginDeclaration {
@@ -71,15 +72,16 @@ impl PluginRegistrar for LocalPluginRegistrar {
         self.plugin = Some(plugin);
     }
 }
+pub type PluginWrapperArc = Arc<PluginWrapper>;
 pub struct PluginWrapper {
     pub meta: PluginMeta,
-    pub plugin: BotPluginWrapped,
+    pub plugin_instance: BotPluginWrapped,
     pub library: Rc<Library>,
 }
 unsafe impl Send for PluginWrapper {}
 #[derive(Default)]
 pub struct PluginManager {
-    pub plugins: HashMap<String, Arc<Mutex<PluginWrapper>>>,
+    pub plugins: HashMap<String, PluginWrapperArc>,
     // pub libraries: HashMap<String, Rc<Library>>,
 }
 impl PluginManager {
@@ -120,11 +122,11 @@ impl PluginManager {
         let plugin_inst = registrar.plugin.unwrap().clone();
         self.plugins.insert(
             registrar.name.clone(),
-            Arc::new(Mutex::new(PluginWrapper {
+            Arc::new(PluginWrapper {
                 library: registrar.lib,
                 meta: plugin_inst.clone().lock().await.get_meta(),
-                plugin: plugin_inst,
-            })),
+                plugin_instance: plugin_inst,
+            }),
         );
         // self.libraries.insert(registrar.name, registrar.lib);
         Ok(())
@@ -133,7 +135,7 @@ impl PluginManager {
 
 #[macro_export]
 macro_rules! export_plugin {
-    ($register:expr, $name:expr) => {
+    ($register:expr, $name:expr, $plugin_instance:expr) => {
         #[doc(hidden)]
         #[no_mangle]
         pub static plugin_declaration: $crate::countdown_bot::plugin::PluginDeclaration =
@@ -143,5 +145,21 @@ macro_rules! export_plugin {
                 register: $register,
                 name: $name,
             };
+        #[allow(improper_ctypes_definitions)]
+        extern "C" fn register(
+            registrar: &mut dyn countdown_bot3::countdown_bot::plugin::PluginRegistrar,
+        ) {
+            registrar.register_plugin(std::sync::Arc::new(tokio::sync::Mutex::new(
+                $plugin_instance,
+            )));
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! initialize_plugin {
+    ($bot:expr) => {
+        log::set_logger($bot.get_logger()).ok();
+        log::set_max_level($bot.get_max_log_level());
     };
 }

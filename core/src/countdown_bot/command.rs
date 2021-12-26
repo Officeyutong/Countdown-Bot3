@@ -3,7 +3,10 @@ use super::event::{
     EventContainer,
 };
 use anyhow::anyhow;
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::{BTreeMap, HashMap},
+    sync::Arc,
+};
 #[derive(Debug)]
 pub struct Command {
     pub command_name: String,
@@ -70,7 +73,7 @@ impl Command {
 }
 
 pub struct CommandManager {
-    pub command_map: HashMap<String, Arc<Command>>,
+    pub command_map: BTreeMap<String, Arc<Command>>,
     alias_map: HashMap<String, String>,
     curr_plugin_name: String,
 }
@@ -81,7 +84,7 @@ impl CommandManager {
     pub fn new() -> Self {
         CommandManager {
             alias_map: HashMap::new(),
-            command_map: HashMap::new(),
+            command_map: BTreeMap::new(),
             curr_plugin_name: String::from(""),
         }
     }
