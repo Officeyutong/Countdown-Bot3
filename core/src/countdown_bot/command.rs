@@ -3,11 +3,22 @@ use super::event::{
     EventContainer,
 };
 use anyhow::anyhow;
+use tokio::sync::Mutex;
 use std::{
     collections::{BTreeMap, HashMap},
     sync::Arc,
 };
-#[derive(Debug)]
+#[async_trait::async_trait]
+pub trait CommandHandler {
+    async fn on_command(
+        &mut self,
+        command: String,
+        args: Vec<String>,
+        sender: &SenderType,
+    ) -> Result<(), Box<dyn std::error::Error + Send>>;
+}
+pub type WrappedCommandHandler = Mutex<Box<dyn CommandHandler + Send>>;
+// #[derive(Debug)]
 pub struct Command {
     pub command_name: String,
     pub alias: Vec<String>,
@@ -16,6 +27,7 @@ pub struct Command {
     pub group_enabled: bool,
     pub private_enabled: bool,
     pub console_enabled: bool,
+    pub command_handler: Option<WrappedCommandHandler>,
 }
 
 impl Command {
@@ -28,6 +40,7 @@ impl Command {
             group_enabled: false,
             private_enabled: false,
             console_enabled: false,
+            command_handler: None,
         }
     }
     // pub fn set_async(self, v: bool) -> Self {
@@ -35,6 +48,11 @@ impl Command {
     //     t.async_command = v;
     //     return t;
     // }
+    pub fn handler(self, s: Box<dyn CommandHandler + Send>) -> Self {
+        let mut t = Command::from(self);
+        t.command_handler = Some(Mutex::new(s));
+        return t;
+    }
     pub fn single_alias(self, s: &str) -> Self {
         let mut t = Command::from(self);
         t.alias.push(String::from(s));

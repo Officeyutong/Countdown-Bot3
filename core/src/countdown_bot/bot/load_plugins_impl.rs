@@ -59,7 +59,8 @@ impl CountdownBot {
             info!("Loading {}", name);
             self.state_manager.set_curr_plugin(name.clone());
             self.command_manager.update_plugin_name(name.clone());
-            self.schedule_loop_manager.set_current_plugin(plugin.plugin_instance.clone());
+            self.schedule_loop_manager
+                .set_current_plugin(plugin.plugin_instance.clone());
             // let plugin_locked = plugin.lock().await;
             if let Err(e) = plugin.plugin_instance.lock().await.on_enable(self) {
                 error!("Error enablng: {}", name);
@@ -74,7 +75,11 @@ impl CountdownBot {
         );
         debug!(
             "Registered commands: {:?}",
-            self.command_manager.command_map
+            self.command_manager
+                .command_map
+                .iter()
+                .map(|x| x.0)
+                .collect::<Vec<&String>>()
         );
         return Ok(());
     }

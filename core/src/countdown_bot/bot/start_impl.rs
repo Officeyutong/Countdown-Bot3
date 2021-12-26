@@ -72,14 +72,22 @@ impl CountdownBot {
 
         self.client = Some(CountdownBotClient::new(call_tx.clone()));
         {
-            for wrapper in self
+            for (name, wrapper) in self
                 .plugin_manager
                 .plugins
                 .iter()
-                .map(|x| x.1.clone())
-                .collect::<Vec<PluginWrapperArc>>()
+                .map(|(x, y)| (x.clone(), y.clone()))
+                .collect::<Vec<(String, PluginWrapperArc)>>()
             {
-                wrapper.plugin_instance.lock().await.on_before_start(self)?;
+                self.state_manager.set_curr_plugin(name.clone());
+                self.command_manager.update_plugin_name(name.clone());
+                self.schedule_loop_manager
+                    .set_current_plugin(wrapper.plugin_instance.clone());
+                wrapper
+                    .plugin_instance
+                    .lock()
+                    .await
+                    .on_before_start(self, self.create_client())?;
             }
         }
         {

@@ -103,13 +103,25 @@ impl CountdownBot {
                                 .collect::<Vec<String>>();
                             let sender_cloned = parsed_sender.clone();
                             let client_cloned = self.create_client();
+                            let cmd_cloned = cmd.clone();
                             tokio::spawn(async move {
                                 let local_sender = sender_cloned;
-                                let call_ret = plugin
-                                    .lock()
-                                    .await
-                                    .on_command(cmd_name, args, &local_sender)
-                                    .await;
+                                let local_cmd = cmd_cloned;
+
+                                let call_ret = if let Some(ref handler) = local_cmd.command_handler
+                                {
+                                    handler
+                                        .lock()
+                                        .await
+                                        .on_command(cmd_name, args, &local_sender)
+                                        .await
+                                } else {
+                                    plugin
+                                        .lock()
+                                        .await
+                                        .on_command(cmd_name, args, &local_sender)
+                                        .await
+                                };
                                 if let Err(e) = call_ret {
                                     error!("{:#?}", e);
                                     client_cloned

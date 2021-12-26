@@ -1,4 +1,5 @@
 use super::bot;
+use super::client::CountdownBotClient;
 use super::command::SenderType;
 use super::event::EventContainer;
 use libloading::Library;
@@ -28,6 +29,7 @@ pub trait BotPlugin {
     fn on_before_start(
         &mut self,
         bot: &mut bot::CountdownBot,
+        client: CountdownBotClient,
     ) -> std::result::Result<(), Box<dyn std::error::Error>>;
     async fn on_disable(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>>;
     fn get_meta(&self) -> PluginMeta;

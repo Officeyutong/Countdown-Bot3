@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use countdown_bot3::countdown_bot::{
     bot,
     client::CountdownBotClient,
-    command::{Command, SenderType},
+    command::{Command, CommandHandler, SenderType},
     event::{Event, EventContainer},
     plugin::{self, PluginMeta},
 };
@@ -14,6 +14,34 @@ pub struct DemoPlugin {
 impl DemoPlugin {
     pub fn new() -> Self {
         Self { client: None }
+    }
+}
+pub struct WhoamiHandler {
+    client: CountdownBotClient,
+}
+#[async_trait::async_trait]
+impl CommandHandler for WhoamiHandler {
+    async fn on_command(
+        &mut self,
+        _command: String,
+        _args: Vec<String>,
+        sender: &SenderType,
+    ) -> Result<(), Box<dyn std::error::Error + Send>> {
+        let sender_uid = match &sender {
+            SenderType::Console(_) => return Err(Box::from(anyhow!("Unexpected sender!"))),
+            SenderType::Private(evt) => evt.user_id,
+            SenderType::Group(evt) => evt.user_id,
+        };
+        let info = self
+            .client
+            .get_stranger_info(sender_uid.into(), false)
+            .await
+            .unwrap();
+        self.client
+            .quick_send_by_sender(&sender, &format!("{:?}", info))
+            .await
+            .ok();
+        Ok(())
     }
 }
 #[async_trait::async_trait]
@@ -50,22 +78,7 @@ impl plugin::BotPlugin for DemoPlugin {
                     .ok();
                 Ok(())
             }
-            "whoami" => {
-                let sender_uid = match &sender {
-                    SenderType::Console(_) => return Err(Box::from(anyhow!("Unexpected sender!"))),
-                    SenderType::Private(evt) => evt.user_id,
-                    SenderType::Group(evt) => evt.user_id,
-                };
-                let info = client
-                    .get_stranger_info(sender_uid.into(), false)
-                    .await
-                    .unwrap();
-                client
-                    .quick_send_by_sender(&sender, &format!("{:?}", info))
-                    .await
-                    .ok();
-                Ok(())
-            }
+
             _ => {
                 panic!("?")
             }
@@ -84,20 +97,25 @@ impl plugin::BotPlugin for DemoPlugin {
                 .private(true)
                 .console(true),
         )?;
-        bot.register_command(
-            Command::new("whoami")
-                .description("查询我的信息")
-                .group(true)
-                .private(true),
-        )?;
+
         bot.register_schedule((0, 58), String::from("main_loop"));
         return Ok(());
     }
     fn on_before_start(
         &mut self,
         bot: &mut bot::CountdownBot,
+        client: CountdownBotClient
     ) -> std::result::Result<(), Box<dyn std::error::Error>> {
-        self.client = Some(bot.create_client());
+        self.client = Some(client);
+        bot.register_command(
+            Command::new("whoami")
+                .description("查询我的信息")
+                .group(true)
+                .private(true)
+                .handler(Box::new(WhoamiHandler {
+                    client: self.client.clone().unwrap(),
+                })),
+        )?;
         Ok(())
     }
     async fn on_disable(&mut self) -> Result<(), Box<(dyn std::error::Error)>> {
