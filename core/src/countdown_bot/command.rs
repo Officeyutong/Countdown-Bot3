@@ -15,7 +15,7 @@ pub trait CommandHandler {
         command: String,
         args: Vec<String>,
         sender: &SenderType,
-    ) -> Result<(), Box<dyn std::error::Error + Send>>;
+    ) -> Result<(), Box<dyn std::error::Error>>;
 }
 pub type WrappedCommandHandler = Mutex<Box<dyn CommandHandler + Send>>;
 // #[derive(Debug)]

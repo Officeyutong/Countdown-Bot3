@@ -6,3 +6,5 @@ logs
 go-cqhttp
 test.json
 notes
+plugin_data
+config.yaml

@@ -25,6 +25,7 @@ uuid = { version = "0.8.2", features = ["v4"] }
 async-trait = "0.1.52"
 tokio-read-line = "0.1.0"
 chrono = "0.4.19"
+serde_yaml = "0.8.23"
 
 [build-dependencies]
 rustc_version = "0.4.0"

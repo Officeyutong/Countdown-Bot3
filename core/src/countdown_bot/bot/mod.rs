@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use std::collections::HashSet;
 use std::path;
 use std::time::Duration;
@@ -22,6 +23,7 @@ pub static RUSTC_VERSION: &str = env!("RUSTC_VERSION");
 pub static PRESERVED_PLUGIN_NAMES: [&str; 1] = ["<bot>"];
 pub struct CountdownBot {
     sys_root: path::PathBuf,
+    plugin_data_root: path::PathBuf,
     config: CountdownBotConfig,
     plugin_manager: PluginManager,
     logger_handle: Option<flexi_logger::LoggerHandle>,
@@ -44,6 +46,13 @@ mod dispatch_impl;
 mod load_plugins_impl;
 mod start_impl;
 impl CountdownBot {
+    pub fn ensure_plugin_data_dir(&self, plugin_name: &str) -> std::io::Result<path::PathBuf> {
+        let buf = self.plugin_data_root.join(plugin_name);
+        if !&buf.exists() {
+            std::fs::create_dir(&buf)?;
+        }
+        return Ok(buf);
+    }
     pub fn create_client(&self) -> CountdownBotClient {
         return self.client.as_ref().unwrap().clone();
     }
@@ -62,9 +71,6 @@ impl CountdownBot {
     pub fn get_max_log_level(&self) -> log::LevelFilter {
         return self.max_log_level.unwrap().clone();
     }
-    pub fn echo(&self, s: &String) {
-        info!("Echo: {}", s);
-    }
     // pub fn get_plugin_ref(&self, name: &String) -> BotPluginWrapped {
     //     let s = self.plugin_manager.plugins.get(name);
     //     return s.unwrap().blocking_lock().plugin.clone();
@@ -75,6 +81,7 @@ impl CountdownBot {
     pub fn new(sys_root: &path::PathBuf) -> CountdownBot {
         CountdownBot {
             sys_root: sys_root.clone(),
+            plugin_data_root: sys_root.join("plugin_data"),
             config: CountdownBotConfig::default(),
             plugin_manager: PluginManager::new(),
             logger_handle: None,
@@ -93,17 +100,21 @@ impl CountdownBot {
         }
     }
     pub async fn init(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>> {
-        if !std::path::Path::new("config.json").exists() {
+        if !std::path::Path::new("config.yaml").exists() {
             tokio::fs::write(
-                "config.json",
-                serde_json::to_string_pretty(&CountdownBotConfig::default())?.as_bytes(),
+                "config.yaml",
+                serde_yaml::to_string(&CountdownBotConfig::default())?.as_bytes(),
             )
             .await?;
             return Err(Box::from(anyhow::anyhow!("已创建默认配置文件，请进行修改")));
         }
+        if !self.plugin_data_root.exists() {
+            std::fs::create_dir(&self.plugin_data_root)?;
+        }
         let mut cfg = Config::new();
         cfg.merge(config::Config::try_from(&CountdownBotConfig::default())?)?;
-        cfg.merge(config::File::with_name("config"))?;
+        cfg.merge(config::File::with_name("config"))
+            .map_err(|x| anyhow!(format!("读取配置文件时发生错误: {}", x)))?;
         self.config = cfg.try_into().expect("Cannot deserialize config file!");
         use flexi_logger::{opt_format, Duplicate, FileSpec, Logger, LoggerHandle};
         self.logger_handle = Some::<LoggerHandle>(

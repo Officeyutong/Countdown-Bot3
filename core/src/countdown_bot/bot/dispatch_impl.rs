@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use log::error;
-
 use crate::countdown_bot::{
     command::{Command, CommandSender, SenderType},
     event::{message::MessageEvent, Event, EventContainer},
 };
+use anyhow::anyhow;
+use log::error;
 
 use super::CountdownBot;
 
@@ -66,15 +66,13 @@ impl CountdownBot {
                 Ok(cmd) => {
                     if enable_checker(&cmd) {
                         if cmd.plugin_name.as_ref().unwrap() == "<bot>" {
+                            let mut args = splitted
+                                .iter()
+                                .map(|x| String::from(*x))
+                                .collect::<Vec<String>>();
+                            args.remove(0);
                             let call_result = self
-                                .on_command(
-                                    cmd.command_name.clone(),
-                                    splitted
-                                        .iter()
-                                        .map(|x| String::from(*x))
-                                        .collect::<Vec<String>>(),
-                                    parsed_sender.clone(),
-                                )
+                                .on_command(cmd.command_name.clone(), args, parsed_sender.clone())
                                 .await;
                             if let Err(e) = call_result {
                                 self.create_client()
@@ -97,32 +95,34 @@ impl CountdownBot {
                                 .plugin_instance
                                 .clone();
                             let cmd_name = cmd.command_name.clone();
-                            let args = splitted
+                            let mut args = splitted
                                 .iter()
                                 .map(|x| String::from(*x))
                                 .collect::<Vec<String>>();
+                            args.remove(0);
                             let sender_cloned = parsed_sender.clone();
                             let client_cloned = self.create_client();
                             let cmd_cloned = cmd.clone();
                             tokio::spawn(async move {
                                 let local_sender = sender_cloned;
                                 let local_cmd = cmd_cloned;
-
-                                let call_ret = if let Some(ref handler) = local_cmd.command_handler
-                                {
-                                    handler
-                                        .lock()
-                                        .await
-                                        .on_command(cmd_name, args, &local_sender)
-                                        .await
-                                } else {
-                                    plugin
-                                        .lock()
-                                        .await
-                                        .on_command(cmd_name, args, &local_sender)
-                                        .await
-                                };
+                                let call_ret =
+                                    (if let Some(ref handler) = local_cmd.command_handler {
+                                        handler
+                                            .lock()
+                                            .await
+                                            .on_command(cmd_name, args, &local_sender)
+                                            .await
+                                    } else {
+                                        plugin
+                                            .lock()
+                                            .await
+                                            .on_command(cmd_name, args, &local_sender)
+                                            .await
+                                    })
+                                    .map_err(|e| anyhow!(format!("{}", e)));
                                 if let Err(e) = call_ret {
+                                    // let err2 = anyhow!(format!("{}", e));
                                     error!("{:#?}", e);
                                     client_cloned
                                         .quick_send_by_sender(
@@ -131,7 +131,7 @@ impl CountdownBot {
                                         )
                                         .await
                                         .ok();
-                                }
+                                };
                             });
                         }
                         Ok(())

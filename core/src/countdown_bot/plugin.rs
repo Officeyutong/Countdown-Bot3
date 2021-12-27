@@ -13,25 +13,22 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 pub type BotPluginWrapped = Arc<Mutex<dyn BotPlugin + Send>>;
 // pub type BotPluginWrapped = Arc<dyn BotPlugin + Send>;
-
+pub type HookResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 #[derive(Debug)]
 pub struct PluginMeta {
     pub author: String,
     pub description: String,
-    pub version: f64,
+    pub version: String,
 }
 #[async_trait::async_trait]
 pub trait BotPlugin {
-    fn on_enable(
-        &mut self,
-        bot: &mut bot::CountdownBot,
-    ) -> std::result::Result<(), Box<dyn std::error::Error>>;
+    fn on_enable(&mut self, bot: &mut bot::CountdownBot) -> HookResult<()>;
     fn on_before_start(
         &mut self,
         bot: &mut bot::CountdownBot,
         client: CountdownBotClient,
-    ) -> std::result::Result<(), Box<dyn std::error::Error>>;
-    async fn on_disable(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>>;
+    ) -> HookResult<()>;
+    async fn on_disable(&mut self) -> HookResult<()>;
     fn get_meta(&self) -> PluginMeta;
     async fn on_event(&mut self, event: EventContainer) -> bool;
     async fn on_command(
@@ -39,7 +36,7 @@ pub trait BotPlugin {
         command: String,
         args: Vec<String>,
         sender: &SenderType,
-    ) -> Result<(), Box<dyn std::error::Error + Send>>;
+    ) -> Result<(), Box<dyn std::error::Error>>;
     async fn on_state_hook(&mut self) -> String;
     async fn on_schedule_loop(&mut self, name: &str);
 }
@@ -137,18 +134,18 @@ impl PluginManager {
 
 #[macro_export]
 macro_rules! export_plugin {
-    ($register:expr, $name:expr, $plugin_instance:expr) => {
+    ($name:expr, $plugin_instance:expr) => {
         #[doc(hidden)]
         #[no_mangle]
         pub static plugin_declaration: $crate::countdown_bot::plugin::PluginDeclaration =
             $crate::countdown_bot::plugin::PluginDeclaration {
                 rustc_version: $crate::countdown_bot::bot::RUSTC_VERSION,
                 core_version: $crate::countdown_bot::bot::CORE_VERSION,
-                register: $register,
+                register: __plugin_register,
                 name: $name,
             };
         #[allow(improper_ctypes_definitions)]
-        extern "C" fn register(
+        extern "C" fn __plugin_register(
             registrar: &mut dyn countdown_bot3::countdown_bot::plugin::PluginRegistrar,
         ) {
             registrar.register_plugin(std::sync::Arc::new(tokio::sync::Mutex::new(
@@ -159,7 +156,7 @@ macro_rules! export_plugin {
 }
 
 #[macro_export]
-macro_rules! initialize_plugin {
+macro_rules! initialize_plugin_logger {
     ($bot:expr) => {
         log::set_logger($bot.get_logger()).ok();
         log::set_max_level($bot.get_max_log_level());
