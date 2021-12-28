@@ -36,7 +36,9 @@ checksum = "84450d0b4a8bd1ba4144ce8ce718fbc5d071358b1e5384bace6536b3d1f2d5b3"
 name = "app"
 version = "0.1.0"
 dependencies = [
+ "broadcast",
  "countdown-bot3",
+ "couplet",
  "demo",
  "simple_rand",
  "tokio",
@@ -109,6 +111,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4152116fd6e9dadb291ae18fc1ec3575ed6d84c29642d97890f4b4a3417297e4"
 dependencies = [
  "generic-array",
+]
+
+[[package]]
+name = "broadcast"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "chrono",
+ "countdown-bot3",
+ "log",
+ "reqwest",
+ "serde 1.0.132",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]
@@ -209,6 +226,19 @@ dependencies = [
  "tokio-tungstenite",
  "url",
  "uuid",
+]
+
+[[package]]
+name = "couplet"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "countdown-bot3",
+ "reqwest",
+ "serde 1.0.132",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]

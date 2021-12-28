@@ -56,7 +56,7 @@ https://github.com/Officeyutong/Countdown-Bot3"#,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let state_str = self.state_manager.create_state(&self.plugin_manager).await;
         self.create_client()
-            .quick_send_by_sender(&sender, &state_str)
+            .quick_send_by_sender(&sender, &state_str?)
             .await
             .ok();
         Ok(())

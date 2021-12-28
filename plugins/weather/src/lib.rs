@@ -82,14 +82,16 @@ impl BotPlugin for WeatherPlugin {
             version: String::from("2.0"),
         }
     }
-    async fn on_event(&mut self, _event: EventContainer) -> bool {
-        true
+    async fn on_event(&mut self, _event: EventContainer) -> HookResult<()> {
+        Ok(())
     }
 
-    async fn on_state_hook(&mut self) -> String {
-        String::new()
+    async fn on_state_hook(&mut self) -> HookResult<String> {
+        Ok(String::new())
     }
-    async fn on_schedule_loop(&mut self, _name: &str) {}
+    async fn on_schedule_loop(&mut self, _name: &str) -> HookResult<()> {
+        Ok(())
+    }
 
     async fn on_command(
         &mut self,

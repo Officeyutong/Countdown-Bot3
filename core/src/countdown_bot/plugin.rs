@@ -34,15 +34,15 @@ pub trait BotPlugin {
     ) -> HookResult<()>;
     async fn on_disable(&mut self) -> HookResult<()>;
     fn get_meta(&self) -> PluginMeta;
-    async fn on_event(&mut self, event: EventContainer) -> bool;
+    async fn on_event(&mut self, event: EventContainer) -> HookResult<()>;
     async fn on_command(
         &mut self,
         command: String,
         args: Vec<String>,
         sender: &SenderType,
     ) -> Result<(), Box<dyn std::error::Error>>;
-    async fn on_state_hook(&mut self) -> String;
-    async fn on_schedule_loop(&mut self, name: &str);
+    async fn on_state_hook(&mut self) -> HookResult<String>;
+    async fn on_schedule_loop(&mut self, name: &str) -> HookResult<()>;
 }
 pub type CTypePluginRegisterCallback = unsafe extern "C" fn(&mut dyn PluginRegistrar);
 pub type PluginRegisterCallback = fn(&mut dyn PluginRegistrar);

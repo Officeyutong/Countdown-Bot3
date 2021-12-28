@@ -81,8 +81,8 @@ impl BotPlugin for SimpleRandPlugin {
             version: String::from("1.0"),
         }
     }
-    async fn on_event(&mut self, _event: EventContainer) -> bool {
-        true
+    async fn on_event(&mut self, _event: EventContainer) -> HookResult<()> {
+        Ok(())
     }
     async fn on_command(
         &mut self,
@@ -124,10 +124,12 @@ impl BotPlugin for SimpleRandPlugin {
             .await?;
         Ok(())
     }
-    async fn on_state_hook(&mut self) -> String {
-        String::new()
+    async fn on_state_hook(&mut self) -> HookResult<String> {
+        Ok(String::new())
     }
-    async fn on_schedule_loop(&mut self, _name: &str) {}
+    async fn on_schedule_loop(&mut self, _name: &str) -> HookResult<()> {
+        Ok(())
+    }
 }
 
 countdown_bot3::export_static_plugin!(PLUGIN_NAME, SimpleRandPlugin::new());

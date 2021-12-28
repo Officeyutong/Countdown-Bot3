@@ -66,7 +66,8 @@ impl ScheduleLoopManager {
                             .lock()
                             .await
                             .on_schedule_loop(name_cloned.as_str())
-                            .await;
+                            .await
+                            .ok();
                     });
                 }
             }

@@ -4,7 +4,7 @@ use countdown_bot3::countdown_bot::{
     client::CountdownBotClient,
     command::{Command, CommandHandler, SenderType},
     event::{Event, EventContainer},
-    plugin::{self, PluginMeta},
+    plugin::{self, PluginMeta, HookResult},
 };
 use log::{debug, info};
 static PLUGIN_NAME: &str = "demo";
@@ -53,22 +53,23 @@ impl CommandHandler for WhoamiHandler {
 // }
 #[async_trait::async_trait]
 impl plugin::BotPlugin for DemoPlugin {
-    async fn on_schedule_loop(&mut self, name: &str) {
+    async fn on_schedule_loop(&mut self, name: &str) -> HookResult<()> {
         match name {
             "main_loop" => {
                 info!("Loop!");
             }
             _ => {}
         };
+        Ok(())
     }
-    async fn on_state_hook(&mut self) -> String {
-        String::new()
+    async fn on_state_hook(&mut self) -> HookResult<String> {
+        Ok(String::new())
     }
-    async fn on_event(&mut self, event: EventContainer) -> bool {
+    async fn on_event(&mut self, event: EventContainer) -> HookResult<()> {
         if let Event::Message(evt) = event.event {
             debug!("Message! {:?}", evt);
         }
-        return true;
+        Ok(())
     }
     async fn on_command(
         &mut self,

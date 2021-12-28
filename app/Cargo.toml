@@ -8,6 +8,9 @@ edition = "2021"
 [dependencies]
 countdown-bot3 = { path = "../core" }
 tokio = "1.15.0"
+
 demo = { path = "../plugins/demo" }
 simple_rand = { path = "../plugins/simple_rand" }
 weather = { path = "../plugins/weather" }
+couplet = { path = "../plugins/couplet" }
+broadcast = { path = "../plugins/broadcast" }

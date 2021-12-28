@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use super::plugin::PluginManager;
+use super::{plugin::PluginManager, client::ResultType};
 #[derive(Default)]
 pub struct StateHookManager {
     pub hooks: BTreeSet<String>,
@@ -14,7 +14,7 @@ impl StateHookManager {
     pub fn register_state_hook(&mut self) {
         self.hooks.insert(self.curr_plugin.clone());
     }
-    pub async fn create_state(&self, plugin_manager: &PluginManager) -> String {
+    pub async fn create_state(&self, plugin_manager: &PluginManager) -> ResultType<String> {
         let mut buf: Vec<String> = vec![];
         for plugin_name in self.hooks.iter() {
             let plugin = plugin_manager
@@ -23,9 +23,9 @@ impl StateHookManager {
                 .unwrap();
             buf.push(format!(
                 "{}\n",
-                plugin.plugin_instance.lock().await.on_state_hook().await
+                plugin.plugin_instance.lock().await.on_state_hook().await?
             ));
         }
-        return buf.join("\n");
+        return Ok(buf.join("\n"));
     }
 }

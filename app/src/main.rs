@@ -11,7 +11,8 @@ async fn main() {
     bot.add_plugin_static_register_hook(demo::plugin_register);
     bot.add_plugin_static_register_hook(simple_rand::plugin_register);
     bot.add_plugin_static_register_hook(weather::plugin_register);
-    
+    bot.add_plugin_static_register_hook(couplet::plugin_register);
+    bot.add_plugin_static_register_hook(broadcast::plugin_register);
     bot.init().await.expect("Failed to initialize bot.");
     bot.run().await.unwrap();
 }

@@ -37,7 +37,7 @@ impl CountdownBot {
                     .lock()
                     .await
                     .on_event(event_cloned)
-                    .await;
+                    .await.ok();
             });
 
             // .await;
