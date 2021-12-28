@@ -43,7 +43,11 @@ impl SimpleRandPlugin {
 }
 #[async_trait::async_trait]
 impl BotPlugin for SimpleRandPlugin {
-    fn on_enable(&mut self, bot: &mut bot::CountdownBot) -> HookResult<()> {
+    fn on_enable(
+        &mut self,
+        bot: &mut bot::CountdownBot,
+        _handle: tokio::runtime::Handle,
+    ) -> HookResult<()> {
         initialize_plugin_logger!(bot);
         self.plugin_data_root = Some(bot.ensure_plugin_data_dir(PLUGIN_NAME)?);
         bot.register_command(
@@ -126,4 +130,4 @@ impl BotPlugin for SimpleRandPlugin {
     async fn on_schedule_loop(&mut self, _name: &str) {}
 }
 
-countdown_bot3::export_plugin!(PLUGIN_NAME, SimpleRandPlugin::new());
+countdown_bot3::export_static_plugin!(PLUGIN_NAME, SimpleRandPlugin::new());

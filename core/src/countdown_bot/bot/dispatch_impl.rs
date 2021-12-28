@@ -30,12 +30,17 @@ impl CountdownBot {
             }
         }
         for (_, val) in self.plugin_manager.plugins.iter() {
-            val.plugin_instance
-                .clone()
-                .lock()
-                .await
-                .on_event(event.clone())
-                .await;
+            let plugin_instance_ref = val.plugin_instance.clone();
+            let event_cloned = event.clone();
+            tokio::spawn(async move {
+                plugin_instance_ref
+                    .lock()
+                    .await
+                    .on_event(event_cloned)
+                    .await;
+            });
+
+            // .await;
         }
     }
     pub async fn dispatch_command(&mut self, sender: CommandSender) {

@@ -10,10 +10,14 @@ use log::{debug, info};
 static PLUGIN_NAME: &str = "demo";
 pub struct DemoPlugin {
     client: Option<CountdownBotClient>,
+    runtime: Option<tokio::runtime::Runtime>,
 }
 impl DemoPlugin {
     pub fn new() -> Self {
-        Self { client: None }
+        Self {
+            client: None,
+            runtime: None,
+        }
     }
 }
 pub struct WhoamiHandler {
@@ -44,6 +48,9 @@ impl CommandHandler for WhoamiHandler {
         Ok(())
     }
 }
+// fn test(){
+
+// }
 #[async_trait::async_trait]
 impl plugin::BotPlugin for DemoPlugin {
     async fn on_schedule_loop(&mut self, name: &str) {
@@ -69,6 +76,8 @@ impl plugin::BotPlugin for DemoPlugin {
         args: Vec<String>,
         sender: &SenderType,
     ) -> Result<(), Box<dyn std::error::Error>> {
+        let __guard = self.runtime.as_ref().unwrap().enter();
+        // tokio::time::sleep(Duration::from_secs(1)).await;
         let client = self.client.clone().unwrap();
         match command.as_str() {
             "test_command" => {
@@ -87,7 +96,11 @@ impl plugin::BotPlugin for DemoPlugin {
     fn on_enable(
         &mut self,
         bot: &mut countdown_bot3::countdown_bot::bot::CountdownBot,
+        _handle: tokio::runtime::Handle,
     ) -> Result<(), Box<(dyn std::error::Error)>> {
+        self.runtime = Some(tokio::runtime::Runtime::new().unwrap());
+        // tokio::runtime::Handle::
+        // let __guard = rt.enter();
         countdown_bot3::initialize_plugin_logger!(bot);
         bot.register_command(
             Command::new("test_command")
@@ -96,8 +109,9 @@ impl plugin::BotPlugin for DemoPlugin {
                 .private(true)
                 .console(true),
         )?;
-
+        // tokio::spawn(tokio::time::sleep(Duration::from_secs(3)));
         bot.register_schedule((0, 58), String::from("main_loop"));
+
         return Ok(());
     }
     fn on_before_start(
@@ -115,6 +129,7 @@ impl plugin::BotPlugin for DemoPlugin {
                     client: self.client.clone().unwrap(),
                 })),
         )?;
+        // client.send_private_msg(814980678,"qwq").await?;
         Ok(())
     }
     async fn on_disable(&mut self) -> Result<(), Box<(dyn std::error::Error)>> {
@@ -129,4 +144,4 @@ impl plugin::BotPlugin for DemoPlugin {
         }
     }
 }
-countdown_bot3::export_plugin!(PLUGIN_NAME, DemoPlugin::new());
+countdown_bot3::export_static_plugin!(PLUGIN_NAME, DemoPlugin::new());

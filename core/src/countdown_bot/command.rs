@@ -3,11 +3,11 @@ use super::event::{
     EventContainer,
 };
 use anyhow::anyhow;
-use tokio::sync::Mutex;
 use std::{
     collections::{BTreeMap, HashMap},
     sync::Arc,
 };
+use tokio::sync::Mutex;
 #[async_trait::async_trait]
 pub trait CommandHandler {
     async fn on_command(
@@ -48,6 +48,14 @@ impl Command {
     //     t.async_command = v;
     //     return t;
     // }
+    pub fn enable_all(self) -> Self {
+        Self {
+            console_enabled: true,
+            private_enabled: true,
+            group_enabled: true,
+            ..self
+        }
+    }
     pub fn handler(self, s: Box<dyn CommandHandler + Send>) -> Self {
         let mut t = Command::from(self);
         t.command_handler = Some(Mutex::new(s));

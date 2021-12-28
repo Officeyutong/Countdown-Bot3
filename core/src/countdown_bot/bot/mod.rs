@@ -6,7 +6,7 @@ pub type ReceiverMap = std::collections::HashMap<String, SingleCallSender>;
 use super::client::{CountdownBotClient, SingleCallSender};
 use super::command::{Command, CommandManager};
 use super::config::CountdownBotConfig;
-use super::plugin::PluginManager;
+use super::plugin::{PluginManager, PluginRegisterCallback};
 use super::schedule_loop::ScheduleLoopManager;
 use super::state_hook::StateHookManager;
 use config::Config;
@@ -40,6 +40,7 @@ pub struct CountdownBot {
     preserved_plugin_names: HashSet<String>,
     state_manager: StateHookManager,
     schedule_loop_manager: ScheduleLoopManager,
+    plugin_static_register_hooks: Vec<PluginRegisterCallback>,
 }
 mod builtin_command_impl;
 mod dispatch_impl;
@@ -71,12 +72,12 @@ impl CountdownBot {
     pub fn get_max_log_level(&self) -> log::LevelFilter {
         return self.max_log_level.unwrap().clone();
     }
-    // pub fn get_plugin_ref(&self, name: &String) -> BotPluginWrapped {
-    //     let s = self.plugin_manager.plugins.get(name);
-    //     return s.unwrap().blocking_lock().plugin.clone();
-    // }
+
     pub fn register_state_hook(&mut self) {
         self.state_manager.register_state_hook();
+    }
+    pub fn add_plugin_static_register_hook(&mut self, hook: PluginRegisterCallback) {
+        self.plugin_static_register_hooks.push(hook);
     }
     pub fn new(sys_root: &path::PathBuf) -> CountdownBot {
         CountdownBot {
@@ -97,6 +98,7 @@ impl CountdownBot {
             preserved_plugin_names: HashSet::from(PRESERVED_PLUGIN_NAMES.map(|x| String::from(x))),
             state_manager: StateHookManager::default(),
             schedule_loop_manager: ScheduleLoopManager::new(),
+            plugin_static_register_hooks: vec![],
         }
     }
     pub async fn init(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -200,19 +202,22 @@ impl CountdownBot {
         .ok();
         self.register_command(
             Command::new("status")
-                .console(true)
-                .private(true)
-                .group(true)
+                .enable_all()
                 .description("查询Bot运行状态")
                 .with_plugin_name(&String::from("<bot>")),
         )
         .ok();
         self.register_command(
             Command::new("about")
-                .console(true)
-                .private(true)
-                .group(true)
+                .enable_all()
                 .description("关于此Bot")
+                .with_plugin_name(&String::from("<bot>")),
+        )
+        .ok();
+        self.register_command(
+            Command::new("plugins")
+                .enable_all()
+                .description("查看插件列表")
                 .with_plugin_name(&String::from("<bot>")),
         )
         .ok();

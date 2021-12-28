@@ -40,7 +40,7 @@
             },
             "args": [],
             "cwd": "${workspaceFolder}",
-            "terminal": "console"
+            "terminal": "integrated"
         },
         {
             "type": "lldb",

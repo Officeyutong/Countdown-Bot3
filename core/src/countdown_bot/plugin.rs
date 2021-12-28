@@ -20,9 +20,13 @@ pub struct PluginMeta {
     pub description: String,
     pub version: String,
 }
-#[async_trait::async_trait]
+#[async_trait::async_trait()]
 pub trait BotPlugin {
-    fn on_enable(&mut self, bot: &mut bot::CountdownBot) -> HookResult<()>;
+    fn on_enable(
+        &mut self,
+        bot: &mut bot::CountdownBot,
+        handle: tokio::runtime::Handle,
+    ) -> HookResult<()>;
     fn on_before_start(
         &mut self,
         bot: &mut bot::CountdownBot,
@@ -40,25 +44,25 @@ pub trait BotPlugin {
     async fn on_state_hook(&mut self) -> String;
     async fn on_schedule_loop(&mut self, name: &str);
 }
-
+pub type CTypePluginRegisterCallback = unsafe extern "C" fn(&mut dyn PluginRegistrar);
+pub type PluginRegisterCallback = fn(&mut dyn PluginRegistrar);
 pub struct PluginDeclaration {
     pub rustc_version: &'static str,
     pub core_version: &'static str,
-    pub register: unsafe extern "C" fn(&mut dyn PluginRegistrar),
-    pub name: &'static str,
+    pub register: CTypePluginRegisterCallback,
 }
 
 pub trait PluginRegistrar {
-    fn register_plugin(&mut self, plugin: BotPluginWrapped);
+    fn register_plugin(&mut self, name: &str, plugin: BotPluginWrapped);
 }
 
 struct LocalPluginRegistrar {
     plugin: Option<BotPluginWrapped>,
-    lib: Rc<Library>,
+    lib: Option<Rc<Library>>,
     name: String,
 }
 impl LocalPluginRegistrar {
-    pub fn new(lib: Rc<Library>) -> LocalPluginRegistrar {
+    pub fn new(lib: Option<Rc<Library>>) -> LocalPluginRegistrar {
         LocalPluginRegistrar {
             lib: lib,
             name: String::from(""),
@@ -67,15 +71,21 @@ impl LocalPluginRegistrar {
     }
 }
 impl PluginRegistrar for LocalPluginRegistrar {
-    fn register_plugin(&mut self, plugin: BotPluginWrapped) {
+    fn register_plugin(&mut self, name: &str, plugin: BotPluginWrapped) {
         self.plugin = Some(plugin);
+        self.name = name.to_string();
     }
 }
 pub type PluginWrapperArc = Arc<PluginWrapper>;
 pub struct PluginWrapper {
     pub meta: PluginMeta,
     pub plugin_instance: BotPluginWrapped,
-    pub library: Rc<Library>,
+    // pub library: Rc<Library>,
+    pub load_source: PluginLoadSource,
+}
+pub enum PluginLoadSource {
+    Static,
+    Dynamic(Rc<Library>),
 }
 unsafe impl Send for PluginWrapper {}
 #[derive(Default)]
@@ -86,6 +96,23 @@ pub struct PluginManager {
 impl PluginManager {
     pub fn new() -> PluginManager {
         PluginManager::default()
+    }
+    pub async fn load_static_plugin(
+        &mut self,
+        register_plugin: PluginRegisterCallback,
+    ) -> Result<(), Box<dyn Error>> {
+        let mut registrar = LocalPluginRegistrar::new(None);
+        register_plugin(&mut registrar);
+        let plugin_inst = registrar.plugin.unwrap().clone();
+        self.plugins.insert(
+            registrar.name.clone(),
+            Arc::new(PluginWrapper {
+                load_source: PluginLoadSource::Static,
+                meta: plugin_inst.clone().lock().await.get_meta(),
+                plugin_instance: plugin_inst,
+            }),
+        );
+        Ok(())
     }
     pub async unsafe fn load_plugin<P: AsRef<OsStr>>(
         &mut self,
@@ -115,14 +142,14 @@ impl PluginManager {
                 ),
             )));
         }
-        let mut registrar = LocalPluginRegistrar::new(Rc::clone(&library));
+        let mut registrar = LocalPluginRegistrar::new(Some(Rc::clone(&library)));
         (plugin_decl.register)(&mut registrar);
-        registrar.name = String::from(plugin_decl.name);
+        // registrar.name = String::from(plugin_decl.name);
         let plugin_inst = registrar.plugin.unwrap().clone();
         self.plugins.insert(
             registrar.name.clone(),
             Arc::new(PluginWrapper {
-                library: registrar.lib,
+                load_source: PluginLoadSource::Dynamic(registrar.lib.unwrap()),
                 meta: plugin_inst.clone().lock().await.get_meta(),
                 plugin_instance: plugin_inst,
             }),
@@ -133,6 +160,19 @@ impl PluginManager {
 }
 
 #[macro_export]
+macro_rules! export_static_plugin {
+    ($name:expr, $plugin_instance:expr) => {
+        pub fn plugin_register(
+            registrar: &mut dyn countdown_bot3::countdown_bot::plugin::PluginRegistrar,
+        ) {
+            registrar.register_plugin(
+                $name,
+                std::sync::Arc::new(tokio::sync::Mutex::new($plugin_instance)),
+            );
+        }
+    };
+}
+#[macro_export]
 macro_rules! export_plugin {
     ($name:expr, $plugin_instance:expr) => {
         #[doc(hidden)]
@@ -141,16 +181,16 @@ macro_rules! export_plugin {
             $crate::countdown_bot::plugin::PluginDeclaration {
                 rustc_version: $crate::countdown_bot::bot::RUSTC_VERSION,
                 core_version: $crate::countdown_bot::bot::CORE_VERSION,
-                register: __plugin_register,
-                name: $name,
+                register: __c_plugin_register,
             };
         #[allow(improper_ctypes_definitions)]
-        extern "C" fn __plugin_register(
+        extern "C" fn __c_plugin_register(
             registrar: &mut dyn countdown_bot3::countdown_bot::plugin::PluginRegistrar,
         ) {
-            registrar.register_plugin(std::sync::Arc::new(tokio::sync::Mutex::new(
-                $plugin_instance,
-            )));
+            registrar.register_plugin(
+                $name,
+                std::sync::Arc::new(tokio::sync::Mutex::new($plugin_instance)),
+            );
         }
     };
 }

@@ -48,6 +48,14 @@ impl CountdownBot {
                 error!("{}", e);
             }
         }
+        info!(
+            "{} static plugins to load.",
+            self.plugin_static_register_hooks.len()
+        );
+        // 加载静态插件
+        for hook in self.plugin_static_register_hooks.iter() {
+            self.plugin_manager.load_static_plugin(*hook).await?;
+        }
         let mut plugins: Vec<(String, Arc<PluginWrapper>)> = vec![];
         for (name, plugin) in self.plugin_manager.plugins.iter() {
             if self.preserved_plugin_names.contains(name) {
@@ -62,7 +70,12 @@ impl CountdownBot {
             self.schedule_loop_manager
                 .set_current_plugin(plugin.plugin_instance.clone());
             // let plugin_locked = plugin.lock().await;
-            if let Err(e) = plugin.plugin_instance.lock().await.on_enable(self) {
+            if let Err(e) = plugin
+                .plugin_instance
+                .lock()
+                .await
+                .on_enable(self, tokio::runtime::Handle::current())
+            {
                 error!("Error enablng: {}", name);
                 error!("{}", e);
             } else {

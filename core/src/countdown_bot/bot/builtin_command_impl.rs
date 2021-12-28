@@ -2,11 +2,39 @@ use std::sync::Arc;
 
 use log::info;
 
-use crate::countdown_bot::command::{Command, SenderType};
+use crate::countdown_bot::{command::{Command, SenderType}, plugin::PluginLoadSource};
 
 use super::CountdownBot;
 
 impl CountdownBot {
+    pub async fn on_command_plugins(
+        &mut self,
+        sender: &SenderType,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let mut buf = String::new();
+        for (name, plugin) in self.plugin_manager.plugins.iter() {
+            buf.push_str(
+                format!(
+                    "{}\n来源: {}\n版本: {}\n作者: {}\n介绍: {}\n",
+                    name,
+                    (match plugin.load_source {
+                        PluginLoadSource::Static => "静态加载",
+                        PluginLoadSource::Dynamic(_) => "动态加载",
+                    }),
+                    plugin.meta.version,
+                    plugin.meta.author,
+                    plugin.meta.description,
+                )
+                .as_str(),
+            );
+        }
+        self.client
+            .clone()
+            .unwrap()
+            .quick_send_by_sender(sender, &buf)
+            .await?;
+        Ok(())
+    }
     pub async fn on_command_about(
         &mut self,
         sender: &SenderType,
@@ -98,6 +126,7 @@ https://github.com/Officeyutong/Countdown-Bot3"#,
             "server_version" => self.on_command_server_version(&sender).await,
             "status" => self.on_command_status(&sender).await,
             "about" => self.on_command_about(&sender).await,
+            "plugins" => self.on_command_plugins(&sender).await,
             _ => {
                 panic!("?")
             }
