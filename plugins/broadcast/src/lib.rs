@@ -83,6 +83,7 @@ impl BotPlugin for BroadcastPlugin {
                 .group(true)
                 .single_alias("广播"),
         )?;
+        bot.register_state_hook();
         self.config = Some(load_config_or_save_default::<BroadcastPluginConfig>(
             &bot.ensure_plugin_data_dir(PLUGIN_NAME)?,
         )?);
@@ -116,7 +117,11 @@ impl BotPlugin for BroadcastPlugin {
     }
 
     async fn on_state_hook(&mut self) -> HookResult<String> {
-        Ok(String::new())
+        let config = self.config.as_ref().unwrap();
+        return Ok(format!(
+            "广播时间: 每天{:0>2}:{:0>2}",
+            config.broadcast_hour, config.broadcast_minute
+        ));
     }
     async fn on_schedule_loop(&mut self, _name: &str) -> HookResult<()> {
         let broadcast_data = self.ensure_broadcast_data().await?;
