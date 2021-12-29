@@ -40,6 +40,7 @@ dependencies = [
  "countdown-bot3",
  "couplet",
  "demo",
+ "fun",
  "group_noticer",
  "hitokoto",
  "simple_rand",
@@ -438,6 +439,21 @@ name = "fuchsia-cprng"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a06f77d526c1a601b7c4cdd98f54b5eaabffc14d5f2f0296febdc7f357c6d3ba"
+
+[[package]]
+name = "fun"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "countdown-bot3",
+ "flexi_logger",
+ "log",
+ "reqwest",
+ "serde 1.0.132",
+ "serde_json",
+ "tokio",
+]
 
 [[package]]
 name = "futf"

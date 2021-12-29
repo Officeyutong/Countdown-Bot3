@@ -16,3 +16,4 @@ couplet = { path = "../plugins/couplet" }
 broadcast = { path = "../plugins/broadcast" }
 group_noticer = { path = "../plugins/group_noticer" }
 hitokoto = { path = "../plugins/hitokoto" }
+fun = { path = "../plugins/fun" }

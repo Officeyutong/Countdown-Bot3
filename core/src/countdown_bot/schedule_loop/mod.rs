@@ -48,11 +48,7 @@ impl ScheduleLoopManager {
                 let can_execute = match &item.last_executed {
                     Some(last_executed) => {
                         let diff = now - last_executed.clone();
-                        if diff.num_hours() >= 23 && diff.num_minutes() >= 50 {
-                            true
-                        } else {
-                            false
-                        }
+                        diff.num_hours() >= 23 && diff.num_minutes() >= 50
                     }
                     None => true,
                 };
