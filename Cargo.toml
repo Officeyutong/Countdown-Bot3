@@ -1,3 +1,3 @@
 [workspace]
-members = ["core", "app", "plugins/demo", "plugins/simple_rand", "plugins/weather", "plugins/couplet", "plugins/broadcast"]
+members = ["core", "app", "plugins/demo", "plugins/simple_rand", "plugins/weather", "plugins/couplet", "plugins/broadcast", "plugins/group_noticer"]
 default-members = ["app", "core"]

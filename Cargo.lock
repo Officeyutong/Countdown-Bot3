@@ -40,6 +40,7 @@ dependencies = [
  "countdown-bot3",
  "couplet",
  "demo",
+ "group_noticer",
  "simple_rand",
  "tokio",
  "weather",
@@ -428,6 +429,19 @@ name = "glob"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
+
+[[package]]
+name = "group_noticer"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "countdown-bot3",
+ "reqwest",
+ "serde 1.0.132",
+ "serde_json",
+ "tokio",
+]
 
 [[package]]
 name = "h2"
