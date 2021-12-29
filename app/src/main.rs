@@ -16,7 +16,7 @@ async fn main() {
     bot.add_plugin_static_register_hook(group_noticer::plugin_register);
     bot.add_plugin_static_register_hook(hitokoto::plugin_register);
     bot.add_plugin_static_register_hook(fun::plugin_register);
-    
+    bot.add_plugin_static_register_hook(oierdb_query::plugin_register);
     bot.init().await.expect("Failed to initialize bot.");
     bot.run().await.unwrap();
 }
