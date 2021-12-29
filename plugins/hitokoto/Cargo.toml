@@ -1,5 +1,5 @@
 [package]
-name = "group_noticer"
+name = "hitokoto"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,3 +12,8 @@ serde = "1.0.132"
 reqwest = { version = "0.11.8"}
 serde_json = "1.0.73"
 tokio = "1.15.0"
+anyhow = "1.0.52"
+soup = "0.5.1"
+scraper = "0.12.0"
+log = "0.4.14"
+flexi_logger = "0.22.0"

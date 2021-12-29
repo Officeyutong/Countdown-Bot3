@@ -33,11 +33,17 @@ impl CountdownBot {
             let plugin_instance_ref = val.plugin_instance.clone();
             let event_cloned = event.clone();
             tokio::spawn(async move {
-                plugin_instance_ref
+                let resp = plugin_instance_ref
                     .lock()
                     .await
-                    .on_event(event_cloned)
-                    .await.ok();
+                    .on_event(event_cloned.clone())
+                    .await;
+                if let Err(e) = resp {
+                    error!(
+                        "Error occured when dispatching event {:?}:\n{}",
+                        event_cloned, e
+                    );
+                }
             });
 
             // .await;
