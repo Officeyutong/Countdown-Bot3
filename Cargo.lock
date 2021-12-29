@@ -44,6 +44,7 @@ dependencies = [
  "group_noticer",
  "hitokoto",
  "oierdb_query",
+ "oiwiki_query",
  "simple_rand",
  "tokio",
  "weather",
@@ -1046,13 +1047,26 @@ dependencies = [
  "anyhow",
  "async-trait",
  "countdown-bot3",
+ "rand 0.8.4",
+ "reqwest",
+ "serde 1.0.132",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "oiwiki_query"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "countdown-bot3",
  "flexi_logger",
  "log",
  "rand 0.8.4",
  "reqwest",
  "serde 1.0.132",
  "serde_json",
- "soup",
  "tokio",
 ]
 
