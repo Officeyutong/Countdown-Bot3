@@ -19,4 +19,5 @@ hitokoto = { path = "../plugins/hitokoto" }
 fun = { path = "../plugins/fun" }
 oierdb_query = { path = "../plugins/oierdb_query" }
 oiwiki_query = { path = "../plugins/oiwiki_query" }
+qrcode_make = { path = "../plugins/qrcode_make" }
 

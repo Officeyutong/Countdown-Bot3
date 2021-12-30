@@ -18,6 +18,7 @@ async fn main() {
     bot.add_plugin_static_register_hook(fun::plugin_register);
     bot.add_plugin_static_register_hook(oierdb_query::plugin_register);
     bot.add_plugin_static_register_hook(oiwiki_query::plugin_register);
+    bot.add_plugin_static_register_hook(qrcode_make::plugin_register);
 
     bot.init().await.expect("Failed to initialize bot.");
     bot.run().await.unwrap();
