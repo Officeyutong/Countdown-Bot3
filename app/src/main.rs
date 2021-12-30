@@ -1,4 +1,3 @@
-// use crate::main
 use countdown_bot3::countdown_bot::bot;
 use std::alloc::System;
 #[global_allocator]
@@ -20,6 +19,7 @@ async fn main() {
     bot.add_plugin_static_register_hook(oiwiki_query::plugin_register);
     bot.add_plugin_static_register_hook(qrcode_make::plugin_register);
     bot.add_plugin_static_register_hook(dns_query::plugin_register);
+    bot.add_plugin_static_register_hook(music_163::plugin_register);
 
     bot.init().await.expect("Failed to initialize bot.");
     bot.run().await.unwrap();

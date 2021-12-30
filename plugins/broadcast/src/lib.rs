@@ -119,7 +119,7 @@ impl BotPlugin for BroadcastPlugin {
     async fn on_state_hook(&mut self) -> HookResult<String> {
         let config = self.config.as_ref().unwrap();
         return Ok(format!(
-            "广播时间: 每天{:0>2}:{:0>2}",
+            "倒计时广播时间: 每天{:0>2}:{:0>2}",
             config.broadcast_hour, config.broadcast_minute
         ));
     }
