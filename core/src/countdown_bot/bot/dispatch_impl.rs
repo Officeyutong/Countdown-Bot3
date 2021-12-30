@@ -5,7 +5,7 @@ use crate::countdown_bot::{
     event::{message::MessageEvent, Event, EventContainer},
 };
 use anyhow::anyhow;
-use log::error;
+use log::{error, info};
 
 use super::CountdownBot;
 
@@ -75,6 +75,7 @@ impl CountdownBot {
         let exec_ret: Result<(), String> =
             match self.command_manager.get_command(&String::from(splitted[0])) {
                 Ok(cmd) => {
+                    info!("Executing command: {}", cmd.command_name);
                     if enable_checker(&cmd) {
                         if cmd.plugin_name.as_ref().unwrap() == "<bot>" {
                             let mut args = splitted
