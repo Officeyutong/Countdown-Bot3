@@ -20,6 +20,7 @@ async fn main() {
     bot.add_plugin_static_register_hook(qrcode_make::plugin_register);
     bot.add_plugin_static_register_hook(dns_query::plugin_register);
     bot.add_plugin_static_register_hook(music_163::plugin_register);
+    bot.add_plugin_static_register_hook(jiuge::plugin_register);
 
     bot.init().await.expect("Failed to initialize bot.");
     bot.run().await.unwrap();

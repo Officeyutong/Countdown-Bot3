@@ -50,6 +50,7 @@ dependencies = [
  "fun",
  "group_noticer",
  "hitokoto",
+ "jiuge",
  "music_163",
  "oierdb_query",
  "oiwiki_query",
@@ -974,6 +975,22 @@ name = "itoa"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1aab8fc367588b89dcee83ab0fd66b72b50b72fa1904d7095045ace2b0c81c35"
+
+[[package]]
+name = "jiuge"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "clap",
+ "countdown-bot3",
+ "log",
+ "rand 0.8.4",
+ "reqwest",
+ "serde 1.0.132",
+ "serde_json",
+ "tokio",
+]
 
 [[package]]
 name = "jpeg-decoder"

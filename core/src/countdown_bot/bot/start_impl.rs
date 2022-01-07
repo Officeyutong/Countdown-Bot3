@@ -116,7 +116,15 @@ impl CountdownBot {
                                     }
                                     Some(result) = read.next() => {
                                         let json = serde_json::from_str::<serde_json::Value>(
-                                            &result.unwrap().to_string().as_str(),
+                                            {
+                                                match &result {
+                                                    Ok(o) => o,
+                                                    Err(e) => {
+                                                        error!("Illegal response: {}",e);
+                                                        break;
+                                                    },
+                                                }
+                                            }.to_string().as_str(),
                                         ).unwrap();
                                         if let Ok(parse_result) = serde_json::from_value::<APICallResponse>(json.clone()) {
                                             if let Some(sender) = receiver_map.remove(&parse_result.echo) {

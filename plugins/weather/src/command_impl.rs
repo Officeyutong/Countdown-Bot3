@@ -1,4 +1,3 @@
-
 use crate::WeatherPlugin;
 use anyhow::anyhow;
 use countdown_bot3::countdown_bot::{client::ResultType, command::SenderType};
@@ -92,7 +91,7 @@ async fn query_location(
     #[derive(Deserialize)]
     struct Resp {
         pub code: String,
-        pub location: Vec<LocationSearchResult>,
+        pub location: Option<Vec<LocationSearchResult>>,
     }
 
     let client = reqwest::Client::new();
@@ -112,7 +111,7 @@ async fn query_location(
     if jsonval.code != "200" {
         return Err(anyhow!("Invalid respone code: {}", jsonval.code).into());
     }
-    if let Some(o) = jsonval.location.get(0) {
+    if let Some(o) = jsonval.location.ok_or(anyhow!("未搜索到任何地点!"))?.get(0) {
         return Ok(o.clone());
     } else {
         return Err(anyhow!("搜索无结果!").into());
@@ -165,7 +164,7 @@ impl WeatherPlugin {
         args: Vec<String>,
         sender: &SenderType,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        debug!("{:#?}",std::thread::current());
+        debug!("{:#?}", std::thread::current());
         if args.len() == 0 {
             return Err(anyhow!("请输入搜索关键字!").into());
         }

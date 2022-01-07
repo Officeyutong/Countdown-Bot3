@@ -22,3 +22,4 @@ oiwiki_query = { path = "../plugins/oiwiki_query" }
 qrcode_make = { path = "../plugins/qrcode_make" }
 dns_query = { path = "../plugins/dns_query" }
 music_163 = { path = "../plugins/music_163" }
+jiuge = { path = "../plugins/jiuge" }
