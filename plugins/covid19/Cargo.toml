@@ -1,18 +1,20 @@
 [package]
-name = "hitokoto"
+name = "covid19"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-countdown-bot3 = { path = "../../core" }
-async-trait = "0.1.52"
 serde = "1.0.132"
 reqwest = { version = "0.11.8"}
 serde_json = "1.0.73"
 tokio = "1.15.0"
+countdown-bot3 = { path = "../../core" }
+async-trait = "0.1.52"
 anyhow = "1.0.52"
-scraper = "0.12.0"
 log = "0.4.14"
-flexi_logger = "0.22.0"
+scraper = "0.12.0"
+regex = "1.5.4"
+lazy_static = "1.4.0"
+chrono = "0.4.19"
