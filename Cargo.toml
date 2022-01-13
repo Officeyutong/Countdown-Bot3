@@ -1,5 +1,5 @@
 [workspace]
-members = ["core", "app", "plugins/demo", "plugins/simple_rand", "plugins/weather", "plugins/couplet", "plugins/broadcast", "plugins/group_noticer"]
+members = ["core", "app", "plugins/simple_rand", "plugins/weather", "plugins/couplet", "plugins/broadcast", "plugins/group_noticer"]
 default-members = ["app", "core"]
 
 [profile.release]

@@ -7,7 +7,6 @@ async fn main() {
     let cwd = std::env::current_dir().expect("Cannot get current working dir!");
     println!("Working dir: {}", &cwd.display());
     let mut bot = bot::CountdownBot::new(&cwd);
-    bot.add_plugin_static_register_hook(demo::plugin_register);
     bot.add_plugin_static_register_hook(simple_rand::plugin_register);
     bot.add_plugin_static_register_hook(weather::plugin_register);
     bot.add_plugin_static_register_hook(couplet::plugin_register);
@@ -22,6 +21,7 @@ async fn main() {
     bot.add_plugin_static_register_hook(music_163::plugin_register);
     bot.add_plugin_static_register_hook(jiuge::plugin_register);
     bot.add_plugin_static_register_hook(covid19::plugin_register);
+    bot.add_plugin_static_register_hook(bullshit::plugin_register);
 
     bot.init().await.expect("Failed to initialize bot.");
     bot.run().await.unwrap();

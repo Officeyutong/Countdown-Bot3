@@ -9,7 +9,6 @@ edition = "2021"
 countdown-bot3 = { path = "../core" }
 tokio = "1.15.0"
 
-demo = { path = "../plugins/demo" }
 simple_rand = { path = "../plugins/simple_rand" }
 weather = { path = "../plugins/weather" }
 couplet = { path = "../plugins/couplet" }
@@ -24,3 +23,4 @@ dns_query = { path = "../plugins/dns_query" }
 music_163 = { path = "../plugins/music_163" }
 jiuge = { path = "../plugins/jiuge" }
 covid19 = { path = "../plugins/covid19" }
+bullshit = { path = "../plugins/bullshit" }
