@@ -2,7 +2,6 @@ use crate::BullshitPlugin;
 use countdown_bot3::countdown_bot::{client::ResultType, command::SenderType};
 use jieba_rs::Jieba;
 use rand::prelude::SliceRandom;
-// use rand::seq::SliceRandom;
 impl BullshitPlugin {
     pub async fn command_shit(&self, sentence: &str, sender: &SenderType) -> ResultType<()> {
         let jieba = Jieba::new();
