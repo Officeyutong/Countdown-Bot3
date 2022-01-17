@@ -23,6 +23,7 @@ async fn main() {
     bot.add_plugin_static_register_hook(covid19::plugin_register);
     bot.add_plugin_static_register_hook(bullshit::plugin_register);
     bot.add_plugin_static_register_hook(ds_drawer_plugin::plugin_register);
+    bot.add_plugin_static_register_hook(docker_runner::plugin_register);
 
     bot.init().await.expect("Failed to initialize bot.");
     bot.run().await.unwrap();
