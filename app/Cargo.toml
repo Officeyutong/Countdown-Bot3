@@ -26,3 +26,4 @@ covid19 = { path = "../plugins/covid19" }
 bullshit = { path = "../plugins/bullshit" }
 ds_drawer_plugin = { path = "../plugins/ds_drawer_plugin" }
 docker_runner = { path = "../plugins/docker_runner" }
+cats = { path = "../plugins/cats" }

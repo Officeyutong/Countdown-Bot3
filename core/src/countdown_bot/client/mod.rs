@@ -13,7 +13,7 @@ pub type RequestSender = mpsc::UnboundedSender<APICallRequest>;
 pub type SenderContainer = std::result::Result<Value, Box<dyn std::error::Error + Send>>;
 pub type SingleCallSender = oneshot::Sender<SenderContainer>;
 pub type ResultType<T> = Result<T, Box<dyn std::error::Error>>;
-pub type ResultSendType<T> = Result<T,Box<dyn std::error::Error + Send>>;
+pub type ResultSendType<T> = Result<T, Box<dyn std::error::Error + Send>>;
 pub fn create_result<T: DeserializeOwned>(resp: ResultType<Value>) -> ResultType<T> {
     return match resp {
         Ok(o) => Ok(serde_json::from_value::<T>(o)?),
