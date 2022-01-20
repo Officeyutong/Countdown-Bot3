@@ -53,12 +53,12 @@ impl CatsPlugin {
             // 尝试时间间隔
             let mut last_try_map = self.last_try.as_ref().lock().await;
             let now = chrono::Local::now().timestamp();
-            if (now
+            if now
                 - last_try_map
                     .get(&(uploader_id as i64))
                     .map(|x| *x)
                     .unwrap_or(0)
-                < config.try_delay)
+                < config.try_delay
             {
                 return Err(anyhow!(
                     "您不在白名单之中，为了防止滥用识别资源，您在 {} 秒内只能尝试上传一次。",
