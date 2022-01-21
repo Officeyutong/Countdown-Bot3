@@ -15,9 +15,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install sqlite
-      run: apt install libsqlite3-dev
+      run: sudo apt install libsqlite3-dev
     - name: Install libssl
-      run: apt install libssl-dev
+      run: sudo apt install libssl-dev
     - name: Build
       run: cargo build --release
     - name: Upload
