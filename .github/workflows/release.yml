@@ -1,0 +1,38 @@
+name: Rust
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build_ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install sqlite
+      run: apt install libsqlite3-dev
+    - name: Install libssl
+      run: apt install libssl-dev
+    - name: Build
+      run: cargo build --release
+    - name: Upload
+      uses: actions/upload-artifact@v2.3.1
+      with:
+        name: "ubuntu-x86_64"
+        path: "target/release/app"
+  build_windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: cargo build --release
+    - name: Upload
+      uses: actions/upload-artifact@v2.3.1
+      with:
+        name: "windows-x86_64"
+        path: "target/release/app.exe"
