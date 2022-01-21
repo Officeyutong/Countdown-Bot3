@@ -5,3 +5,8 @@ default-members = ["app", "core"]
 [profile.release]
 opt-level = 3
 lto = true
+debug = 0
+overflow-checks = false
+
+[profile.dev]
+incremental = true
