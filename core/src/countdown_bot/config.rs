@@ -6,6 +6,7 @@ pub struct CountdownBotConfig {
     pub access_token: String,
     pub reconnect_interval: u32,
     pub command_prefix: Vec<String>,
+    pub ignored_plugins: Vec<String>,
 }
 
 impl CountdownBotConfig {
@@ -16,6 +17,7 @@ impl CountdownBotConfig {
             server_url: String::from("ws://127.0.0.1:2333"),
             reconnect_interval: 5,
             command_prefix: vec![String::from("--"), String::from("!!")],
+            ignored_plugins: vec![],
         }
     }
 }

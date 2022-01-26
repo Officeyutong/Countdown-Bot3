@@ -38,12 +38,17 @@ impl CountdownBot {
                 }
             }
         }
+        info!("Ignored plugins: {:?}", self.config.ignored_plugins);
         info!("Plugins to load:");
         for item in libs.iter() {
             info!("{}", item.display());
         }
         for item in libs.iter() {
-            if let Err(e) = unsafe { self.plugin_manager.load_plugin(item.as_os_str()).await } {
+            if let Err(e) = unsafe {
+                self.plugin_manager
+                    .load_plugin(item.as_os_str(), &self.config.ignored_plugins)
+                    .await
+            } {
                 error!("Error loading: {}", item.display());
                 error!("{}", e);
             }
@@ -52,9 +57,12 @@ impl CountdownBot {
             "{} static plugins to load.",
             self.plugin_static_register_hooks.len()
         );
+
         // 加载静态插件
         for hook in self.plugin_static_register_hooks.iter() {
-            self.plugin_manager.load_static_plugin(*hook).await?;
+            self.plugin_manager
+                .load_static_plugin(*hook, &self.config.ignored_plugins)
+                .await?;
         }
         let mut plugins: Vec<(String, Arc<PluginWrapper>)> = vec![];
         for (name, plugin) in self.plugin_manager.plugins.iter() {

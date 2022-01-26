@@ -26,6 +26,7 @@ async fn main() {
     bot.add_plugin_static_register_hook(docker_runner::plugin_register);
     bot.add_plugin_static_register_hook(cats::plugin_register);
     bot.add_plugin_static_register_hook(math::plugin_register);
+    bot.add_plugin_static_register_hook(sign_in::plugin_register);
 
     bot.init().await.expect("Failed to initialize bot.");
     bot.run().await.unwrap();

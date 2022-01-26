@@ -3,6 +3,7 @@ use super::client::CountdownBotClient;
 use super::command::SenderType;
 use super::event::EventContainer;
 use libloading::Library;
+use log::info;
 use std::collections::HashMap;
 use std::error::Error;
 use std::ffi::OsStr;
@@ -100,9 +101,14 @@ impl PluginManager {
     pub async fn load_static_plugin(
         &mut self,
         register_plugin: PluginRegisterCallback,
+        ignored_plugins: &Vec<String>,
     ) -> Result<(), Box<dyn Error>> {
         let mut registrar = LocalPluginRegistrar::new(None);
         register_plugin(&mut registrar);
+        if ignored_plugins.contains(&registrar.name) {
+            info!("Ignoring: {}", registrar.name);
+            return Ok(());
+        }
         let plugin_inst = registrar.plugin.unwrap().clone();
         self.plugins.insert(
             registrar.name.clone(),
@@ -117,6 +123,7 @@ impl PluginManager {
     pub async unsafe fn load_plugin<P: AsRef<OsStr>>(
         &mut self,
         library_path: P,
+        ignored_plugins: &Vec<String>,
     ) -> Result<(), Box<dyn Error>> {
         let library = Rc::new(Library::new(library_path)?);
         let plugin_decl = library
@@ -145,6 +152,10 @@ impl PluginManager {
         let mut registrar = LocalPluginRegistrar::new(Some(Rc::clone(&library)));
         (plugin_decl.register)(&mut registrar);
         // registrar.name = String::from(plugin_decl.name);
+        if ignored_plugins.contains(&registrar.name) {
+            info!("Ignoring plugin: {}", registrar.name);
+            return Ok(());
+        }
         let plugin_inst = registrar.plugin.unwrap().clone();
         self.plugins.insert(
             registrar.name.clone(),
