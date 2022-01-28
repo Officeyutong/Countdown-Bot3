@@ -24,6 +24,10 @@ pub fn get_inner_text(html: &Html, id: &str) -> ResultType<String> {
     if elems.is_empty() {
         return Err(anyhow!("无法找到{}元素", id).into());
     }
-    let inner_text = elems[0].text().collect::<Vec<&str>>().join("").replace("\n", "");
+    let inner_text = elems[0]
+        .text()
+        .collect::<Vec<&str>>()
+        .join("")
+        .replace("\n", "");
     return Ok(inner_text);
 }

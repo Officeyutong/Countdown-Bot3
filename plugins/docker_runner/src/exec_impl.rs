@@ -96,7 +96,8 @@ impl DockerRunnerPlugin {
         {
             docker_client
                 .kill_container::<&str>(&container.id, None)
-                .await.ok();
+                .await
+                .ok();
             docker_client.stop_container(&container.id, None).await.ok();
             self.client
                 .as_ref()

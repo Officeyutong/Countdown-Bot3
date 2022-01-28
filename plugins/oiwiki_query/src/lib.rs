@@ -86,7 +86,9 @@ impl BotPlugin for OIWikiQueryPlugin {
             )?;
             let mut buf = format!("查询到 {} 条相关内容:\n", resp.len());
             for item in resp.iter() {
-                buf.push_str(format!("{}: https://oi-wiki.org{}\n\n", item.title, item.url).as_str());
+                buf.push_str(
+                    format!("{}: https://oi-wiki.org{}\n\n", item.title, item.url).as_str(),
+                );
             }
             self.client
                 .clone()

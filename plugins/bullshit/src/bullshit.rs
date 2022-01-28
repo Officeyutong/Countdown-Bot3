@@ -50,7 +50,7 @@ pub fn generate_bullshit(主题: &str) -> String {
     let mut 文章: Vec<String> = vec![];
     let mut 段落 = String::new();
     let mut 文章长度: u64 = 0;
-    while 文章长度 < 340*3 {
+    while 文章长度 < 340 * 3 {
         let 随机数 = rng.gen_range(0..=100);
         if 随机数 < 5 && 段落.len() > 200 * 3 {
             段落 = 增加段落(段落);

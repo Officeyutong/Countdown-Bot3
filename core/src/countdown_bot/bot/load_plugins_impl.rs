@@ -85,7 +85,7 @@ impl CountdownBot {
                 .on_enable(self, tokio::runtime::Handle::current())
             {
                 error!("Error enablng: {}", name);
-                error!("{}", e);
+                panic!("{}", e);
             } else {
                 info!("Loaded: name={}, meta={:?}", name, plugin.meta);
             };

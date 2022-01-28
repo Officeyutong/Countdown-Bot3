@@ -34,11 +34,9 @@ impl CatsPlugin {
         } else if let Some(id) = id {
             id
         } else {
-            conn.query_row(
-                "SELECT ID FROM CATS ORDER BY RANDOM() LIMIT 1",
-                [],
-                |r| r.get(0),
-            )?
+            conn.query_row("SELECT ID FROM CATS ORDER BY RANDOM() LIMIT 1", [], |r| {
+                r.get(0)
+            })?
         };
 
         let data = conn

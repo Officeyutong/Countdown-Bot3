@@ -1,4 +1,4 @@
-use std::{sync::Arc, collections::HashMap};
+use std::{collections::HashMap, sync::Arc};
 
 use anyhow::anyhow;
 use async_trait::async_trait;
@@ -38,7 +38,7 @@ impl Default for CatsPlugin {
             client: Default::default(),
             config: Default::default(),
             database: None,
-            last_try: Default::default()
+            last_try: Default::default(),
         }
     }
 }
@@ -80,9 +80,9 @@ impl BotPlugin for CatsPlugin {
         )?;
         let cloned = self.database.as_ref().unwrap().clone();
         tokio::spawn(async move {
-            if let Err(e) = init_database(cloned).await {
-                error!("初始化数据库时发生错误!\n:{}", e);
-            }
+            init_database(cloned)
+                .await
+                .expect("初始化数据库时发生错误!");
         });
         Ok(())
     }
@@ -208,13 +208,13 @@ export_static_plugin!(PLUGIN_NAME, CatsPlugin::default());
 async fn init_database(conn: Arc<Mutex<Connection>>) -> ResultType<()> {
     let db = conn.lock().await;
     db.execute(
-        r#"""CREATE TABLE IF NOT EXISTS CATS(
+        r#"CREATE TABLE IF NOT EXISTS CATS(
         ID INTEGER PRIMARY KEY AUTOINCREMENT,
         USER_ID INTEGER NOT NULL,
         UPLOAD_ID INTEGER,
         DATA BLOB NOT NULL,
         CHECKSUM TEXT NOT NULL UNIQUE
-    )"""#,
+    )"#,
         params![],
     )?;
     db.execute("CREATE INDEX ID_INDEX ON CATS(ID)", params![])

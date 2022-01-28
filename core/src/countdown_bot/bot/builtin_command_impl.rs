@@ -2,7 +2,10 @@ use std::sync::Arc;
 
 use log::info;
 
-use crate::countdown_bot::{command::{Command, SenderType}, plugin::PluginLoadSource};
+use crate::countdown_bot::{
+    command::{Command, SenderType},
+    plugin::PluginLoadSource,
+};
 
 use super::CountdownBot;
 
@@ -105,7 +108,7 @@ https://github.com/Officeyutong/Countdown-Bot3"#,
             if !cmd.alias.is_empty() {
                 buf.push_str(format!("[{}]", cmd.alias.join(",").as_str()).as_str());
             }
-            buf.push_str(format!(": {}\n", cmd.description.as_str()).as_str());
+            buf.push_str(format!(" --- {}\n", cmd.description.as_str()).as_str());
         }
         self.create_client()
             .quick_send_by_sender(&sender, &buf)

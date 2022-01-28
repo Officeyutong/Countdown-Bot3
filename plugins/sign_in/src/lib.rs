@@ -1,5 +1,4 @@
-use std::sync::Arc;
-
+use anyhow::anyhow;
 use async_trait::async_trait;
 use countdown_bot3::{
     countdown_bot::{
@@ -12,17 +11,33 @@ use countdown_bot3::{
     },
     export_static_plugin,
 };
-use log::error;
 use rusqlite::{params, Connection};
+use std::sync::Arc;
 use tokio::sync::Mutex;
 static PLUGIN_NAME: &str = "sign_in";
 use serde::{Deserialize, Serialize};
-#[derive(Deserialize, Serialize, Default)]
+
+mod command_group_query_impl;
+mod command_sign_in_impl;
+mod command_user_query_impl;
+mod fxxk_misc_impl;
+mod misc_impl;
+mod models;
+
+#[derive(Deserialize, Serialize)]
 pub struct SignInConfig {
     pub black_list_groups: Vec<i64>,
     pub hide_score_groups: Vec<i64>,
 }
 
+impl Default for SignInConfig {
+    fn default() -> Self {
+        Self {
+            black_list_groups: vec![888888888],
+            hide_score_groups: vec![888888888],
+        }
+    }
+}
 struct SignInPlugin {
     client: Option<CountdownBotClient>,
     config: Option<SignInConfig>,
@@ -44,34 +59,39 @@ impl BotPlugin for SignInPlugin {
         bot: &mut bot::CountdownBot,
         _handle: tokio::runtime::Handle,
     ) -> HookResult<()> {
-        self.config = Some(load_config_or_save_default(
-            &bot.ensure_plugin_data_dir(PLUGIN_NAME)?,
-        )?);
-        self.database = Some(Arc::new(Mutex::new(Connection::open(
-            bot.ensure_plugin_data_dir(PLUGIN_NAME)?.join("sign_in.db"),
-        )?)));
+        self.config = Some(
+            load_config_or_save_default(&bot.ensure_plugin_data_dir(PLUGIN_NAME)?)
+                .map_err(|e| anyhow!("加载配置时发生错误: {}\n{}", e, e.backtrace()))?,
+        );
+        self.database = Some(Arc::new(Mutex::new(
+            Connection::open(bot.ensure_plugin_data_dir(PLUGIN_NAME)?.join("sign_in.db"))
+                .map_err(|e| anyhow!("加载数据库时发生错误: {}", e))?,
+        )));
         bot.register_command(
             Command::new("sign-in")
                 .group(true)
                 .description("签到")
                 .single_alias("签到")
                 .single_alias("check-in"),
-        )?;
+        )
+        .unwrap();
         bot.register_command(
             Command::new("签到积分")
                 .private(true)
                 .description("签到积分查询"),
-        )?;
+        )
+        .unwrap();
         bot.register_command(
             Command::new("签到记录")
                 .group(true)
                 .description("签到记录查询 | 签到记录 [月份(可选)] [年份(可选)]"),
-        )?;
+        )
+        .unwrap();
         let cloned = self.database.as_ref().unwrap().clone();
         tokio::spawn(async move {
-            if let Err(e) = init_database(cloned).await {
-                error!("初始化数据库时发生错误!\n:{}", e);
-            }
+            init_database(cloned)
+                .await
+                .expect("初始化数据库时发生错误!");
         });
         Ok(())
     }
@@ -111,6 +131,15 @@ impl BotPlugin for SignInPlugin {
         sender: &SenderType,
     ) -> Result<(), Box<dyn std::error::Error>> {
         match command.as_str() {
+            "sign-in" => {
+                self.command_signin(sender).await?;
+            }
+            "签到积分" => {
+                self.command_user_query(sender).await?;
+            }
+            "签到记录" => {
+                self.command_group_query(&args, sender).await?;
+            }
             _ => todo!(),
         };
         return Ok(());
@@ -121,24 +150,26 @@ export_static_plugin!(PLUGIN_NAME, SignInPlugin::default());
 async fn init_database(conn: Arc<Mutex<Connection>>) -> ResultType<()> {
     let db = conn.lock().await;
     db.execute(
-        r#"""CREATE TABLE IF NOT EXISTS SIGNINS(
+        r#"CREATE TABLE IF NOT EXISTS SIGNINS(
             GROUP_ID      INTEGER NOT NULL,
             USER_ID       INTEGER NOT NULL,
             TIME          INTEGER NOT NULL,
             DURATION      INTEGER NOT NULL,
             SCORE         INTEGER NOT NULL,
             SCORE_CHANGES INTEGER NOT NULL
-        )"""#,
+        )"#,
         params![],
-    )?;
+    )
+    .map_err(|e| anyhow!("创建表 SIGNINS 时发生错误: {}", e))?;
     db.execute(
-        r#"""CREATE TABLE IF NOT EXISTS USERS(
+        r#"CREATE TABLE IF NOT EXISTS USERS(
             GROUP_ID INTEGER NOT NULL,
             USER_ID  INTEGER NOT NULL,
             SCORE    INTEGER NOT NULL
-        )"""#,
+        )"#,
         params![],
-    )?;
+    )
+    .map_err(|e| anyhow!("创建表 USERS 时发生错误: {}", e))?;
     db.execute(
         "CREATE INDEX SIGNIN_GROUP_ID_INDEX ON SIGNINS(GROUP_ID)",
         params![],

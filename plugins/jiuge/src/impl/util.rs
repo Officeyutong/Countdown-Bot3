@@ -25,5 +25,3 @@ pub struct SimpleCeleryID {
     pub celery_id: String,
     // pub code: String,
 }
-
-

@@ -1,9 +1,7 @@
 use config::Config;
 use serde::{Deserialize, Serialize};
 
-pub fn load_config_or_save_default<'a, T>(
-    data_path: &std::path::PathBuf,
-) -> std::result::Result<T, Box<dyn std::error::Error>>
+pub fn load_config_or_save_default<'a, T>(data_path: &std::path::PathBuf) -> anyhow::Result<T>
 where
     T: Serialize + Deserialize<'a> + Default,
 {

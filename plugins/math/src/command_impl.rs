@@ -40,10 +40,7 @@ impl MathPlugin {
     pub async fn command_integrate(&self, args: Vec<String>) -> ResultType<ExecuteResult> {
         let x = args.get(0).ok_or(anyhow!("请提供要积分的函数"))?;
         return self
-            .execute(
-                &format!("output=integrate('{}')", x),
-                Some("积分运行超时!"),
-            )
+            .execute(&format!("output=integrate('{}')", x), Some("积分运行超时!"))
             .await;
     }
     pub async fn command_diff(&self, args: Vec<String>) -> ResultType<ExecuteResult> {

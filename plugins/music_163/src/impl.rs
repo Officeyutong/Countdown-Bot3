@@ -112,7 +112,10 @@ impl Music163Plugin {
         }
         if send_record {
             bot_client
-                .quick_send_by_sender(sender, "QQ语音音质较差，同时上传录音可能需要较长时间，请等待..")
+                .quick_send_by_sender(
+                    sender,
+                    "QQ语音音质较差，同时上传录音可能需要较长时间，请等待..",
+                )
                 .await?;
             bot_client
                 .quick_send_by_sender(sender, format!("[CQ:record,file={}]", music_url).as_str())
