@@ -20,7 +20,6 @@ use serde::{Deserialize, Serialize};
 mod command_group_query_impl;
 mod command_sign_in_impl;
 mod command_user_query_impl;
-mod fxxk_misc_impl;
 mod misc_impl;
 mod models;
 
