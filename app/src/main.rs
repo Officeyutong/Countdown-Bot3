@@ -2,7 +2,7 @@ use countdown_bot3::countdown_bot::bot;
 use std::alloc::System;
 #[global_allocator]
 static ALLOCATOR: System = System;
-#[tokio::main]
+#[tokio::main(flavor = "multi_thread")]
 async fn main() {
     let cwd = std::env::current_dir().expect("Cannot get current working dir!");
     println!("Working dir: {}", &cwd.display());
@@ -27,6 +27,7 @@ async fn main() {
     bot.add_plugin_static_register_hook(cats::plugin_register);
     bot.add_plugin_static_register_hook(math::plugin_register);
     bot.add_plugin_static_register_hook(sign_in::plugin_register);
+    bot.add_plugin_static_register_hook(music_gen::plugin_register);
 
     bot.init().await.expect("Failed to initialize bot.");
     bot.run().await.unwrap();

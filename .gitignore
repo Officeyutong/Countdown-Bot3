@@ -9,3 +9,5 @@ notes
 plugin_data
 config.yaml
 libsqlite3-0.dll
+out.mp3
+out.wav
