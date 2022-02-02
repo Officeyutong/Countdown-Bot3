@@ -114,11 +114,12 @@ impl MusicGenPlugin {
             Err(parse_err) => {
                 // parse_err.
                 error!("{}", parse_err);
-                self.client
-                    .as_ref()
-                    .unwrap()
-                    .quick_send_by_sender(&sender, &help_str)
-                    .await?;
+                return Err(parse_err.into());
+                // self.client
+                //     .as_ref()
+                //     .unwrap()
+                //     .quick_send_by_sender(&sender, &format!("{}", parse_err))
+                //     .await?;
             }
         };
         return Ok(());
