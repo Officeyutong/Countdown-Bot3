@@ -67,7 +67,10 @@ impl Default for Music163Plugin {
         Self {
             client: None,
             config: None,
-            http_client: reqwest::Client::new(),
+            http_client: reqwest::ClientBuilder::new()
+                .cookie_store(true)
+                .build()
+                .unwrap(),
         }
     }
 }
