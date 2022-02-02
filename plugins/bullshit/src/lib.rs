@@ -57,7 +57,7 @@ impl BotPlugin for BullshitPlugin {
         PluginMeta {
             author: String::from("officeyutong"),
             description: String::from("狗屁不通文章生成器"),
-            version: String::from("2.0"),
+            version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
     async fn on_event(&mut self, _event: EventContainer) -> HookResult<()> {

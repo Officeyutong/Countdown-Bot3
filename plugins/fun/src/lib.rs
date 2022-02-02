@@ -77,7 +77,7 @@ impl BotPlugin for FunPlugin {
         PluginMeta {
             author: String::from("officeyutong"),
             description: String::from("包括复读机以及一些有意思的小指令"),
-            version: String::from("2.0"),
+            version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
     async fn on_event(&mut self, event: EventContainer) -> HookResult<()> {

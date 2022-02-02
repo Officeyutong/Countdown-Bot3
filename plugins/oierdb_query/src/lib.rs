@@ -73,7 +73,7 @@ impl BotPlugin for OIerDBQueryPlugin {
         PluginMeta {
             author: String::from("officeyutong"),
             description: String::from("OIerDB(http://bytew.net/OIer)查询"),
-            version: String::from("2.0"),
+            version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
     async fn on_event(&mut self, _event: EventContainer) -> HookResult<()> {

@@ -54,7 +54,7 @@ impl BotPlugin for COVID19Plugin {
         PluginMeta {
             author: String::from("officeyutong"),
             description: String::from("丁香园COVID19数据查询"),
-            version: String::from("2.0"),
+            version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
     async fn on_event(&mut self, _event: EventContainer) -> HookResult<()> {

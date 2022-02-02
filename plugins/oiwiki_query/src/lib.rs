@@ -53,7 +53,7 @@ impl BotPlugin for OIWikiQueryPlugin {
         PluginMeta {
             author: String::from("Antares"),
             description: String::from("OI-Wiki查询"),
-            version: String::from("1.0"),
+            version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
     async fn on_event(&mut self, _event: EventContainer) -> HookResult<()> {

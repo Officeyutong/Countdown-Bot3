@@ -66,7 +66,7 @@ impl BotPlugin for QRCodePlugin {
         PluginMeta {
             author: String::from("Antares"),
             description: String::from("二维码生成器"),
-            version: String::from("1.0"),
+            version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
     async fn on_event(&mut self, _event: EventContainer) -> HookResult<()> {

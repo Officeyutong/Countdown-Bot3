@@ -18,7 +18,7 @@ impl CountdownBot {
         for (name, plugin) in self.plugin_manager.plugins.iter() {
             buf.push_str(
                 format!(
-                    "{}\n来源: {}\n版本: {}\n作者: {}\n介绍: {}\n",
+                    "{}\n来源: {}\n版本: {}\n作者: {}\n介绍: {}\n\n",
                     name,
                     (match plugin.load_source {
                         PluginLoadSource::Static => "静态加载",

@@ -92,7 +92,7 @@ impl BotPlugin for JiugePlugin {
         PluginMeta {
             author: String::from("officeyutong"),
             description: String::from("九歌爬虫"),
-            version: String::from("3.0"),
+            version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
     async fn on_event(&mut self, _event: EventContainer) -> HookResult<()> {

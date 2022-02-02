@@ -64,7 +64,7 @@ impl BotPlugin for GroupNoticerPlugin {
         PluginMeta {
             author: String::from("officeyutong"),
             description: String::from("入群退群通知器"),
-            version: String::from("1.0"),
+            version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
     async fn on_event(&mut self, event: EventContainer) -> HookResult<()> {

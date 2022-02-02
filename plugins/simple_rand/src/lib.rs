@@ -78,7 +78,7 @@ impl BotPlugin for SimpleRandPlugin {
         PluginMeta {
             author: String::from("officeyutong"),
             description: String::from("简单随机数实现"),
-            version: String::from("1.0"),
+            version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
     async fn on_event(&mut self, _event: EventContainer) -> HookResult<()> {

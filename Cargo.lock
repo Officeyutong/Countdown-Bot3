@@ -281,7 +281,7 @@ dependencies = [
 
 [[package]]
 name = "broadcast"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -296,7 +296,7 @@ dependencies = [
 
 [[package]]
 name = "bullshit"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -334,7 +334,7 @@ checksum = "c4872d67bab6358e59559027aa3b9157c53d9358c51423c17554809a8858e0f8"
 
 [[package]]
 name = "cats"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -522,7 +522,7 @@ dependencies = [
 
 [[package]]
 name = "covid19"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -744,7 +744,7 @@ dependencies = [
 
 [[package]]
 name = "dns_query"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -760,7 +760,7 @@ dependencies = [
 
 [[package]]
 name = "docker_runner"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -786,7 +786,7 @@ checksum = "1defb949b123415131ecae40ab5dca70e9f39eedda3de2cebb03a8a98fdf5894"
 
 [[package]]
 name = "ds_drawer_plugin"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -938,7 +938,7 @@ dependencies = [
 
 [[package]]
 name = "fun"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1167,7 +1167,7 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "hitokoto"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1393,7 +1393,7 @@ dependencies = [
 
 [[package]]
 name = "jiuge"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1529,7 +1529,7 @@ checksum = "58b6f41fdfbec185dd3dff58b51e323f5bc61692c0de38419a957b0dcfccca3c"
 
 [[package]]
 name = "math"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1625,7 +1625,7 @@ dependencies = [
 
 [[package]]
 name = "music_163"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1830,7 +1830,7 @@ dependencies = [
 
 [[package]]
 name = "oierdb_query"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2676,7 +2676,7 @@ dependencies = [
 
 [[package]]
 name = "sign_in"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3372,7 +3372,7 @@ dependencies = [
 
 [[package]]
 name = "weather"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",

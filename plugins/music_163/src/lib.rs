@@ -105,7 +105,7 @@ impl BotPlugin for Music163Plugin {
         PluginMeta {
             author: String::from("Antares"),
             description: String::from("网易云音乐推歌"),
-            version: String::from("2.0"),
+            version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
     async fn on_event(&mut self, _event: EventContainer) -> HookResult<()> {

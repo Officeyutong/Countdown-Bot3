@@ -91,7 +91,7 @@ impl BotPlugin for DockerRunnerPlugin {
         PluginMeta {
             author: String::from("officeyutong"),
             description: String::from("在Docker中执行代码"),
-            version: String::from("2.0"),
+            version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
     async fn on_event(&mut self, _event: EventContainer) -> HookResult<()> {

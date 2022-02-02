@@ -141,7 +141,7 @@ impl BotPlugin for HitokotoPlugin {
         PluginMeta {
             author: String::from("officeyutong"),
             description: String::from("一言广播 & 查询"),
-            version: String::from("2.0"),
+            version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
     async fn on_event(&mut self, _event: EventContainer) -> HookResult<()> {
