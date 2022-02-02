@@ -136,7 +136,7 @@ impl Music163Plugin {
                         ("password", config.password.as_str()),
                     ]),
                 LoginMode::Email => self.http_client.get(config.sub_url("/login")?).query(&[
-                    ("email", config.phone.as_str()),
+                    ("email", config.email.as_str()),
                     ("password", config.password.as_str()),
                 ]),
             }
