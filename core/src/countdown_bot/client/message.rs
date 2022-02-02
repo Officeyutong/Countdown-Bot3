@@ -7,7 +7,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct MessageIdResp {
-    pub message_id: i32,
+    pub message_id: i64,
 }
 impl Display for MessageIdResp {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -23,10 +23,10 @@ pub enum MessageInfoType {
 }
 #[derive(Deserialize, Debug)]
 pub struct MessageInfoResp {
-    pub time: i32,
+    pub time: i64,
     pub message_type: MessageInfoType,
-    pub message_id: i32,
-    pub real_id: i32,
+    pub message_id: i64,
+    pub real_id: i64,
     pub sender: GroupMessageSender,
     pub message: String,
 }
@@ -46,7 +46,7 @@ impl CountdownBotClient {
         (message, &str),
         (auto_escape, bool)
     );
-    declare_api_call!(delete_message, (), (message_id, i32));
+    declare_api_call!(delete_message, (), (message_id, i64));
     pub async fn get_forward_message(&self, _id: &str) -> ResultType<MessageInfoResp> {
         todo!();
     }

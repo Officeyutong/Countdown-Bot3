@@ -60,11 +60,11 @@ pub struct PrivateMessageEvent {
     pub message_type: String,
     // friend, group, other
     pub sub_type: PrivateMessageSubType,
-    pub message_id: i32,
-    pub user_id: i32,
+    pub message_id: i64,
+    pub user_id: i64,
     pub message: String,
     pub raw_message: String,
-    pub font: i32,
+    pub font: i64,
     pub sender: PrivateEventSender,
 }
 
@@ -80,13 +80,13 @@ pub enum GroupMessageSubType {
 pub struct GroupMessageEvent {
     pub message_type: String,
     pub sub_type: GroupMessageSubType,
-    pub message_id: i32,
+    pub message_id: i64,
     pub group_id: i64,
-    pub user_id: i32,
+    pub user_id: i64,
     pub anonymous: Option<AnonymousData>,
     pub message: String,
     pub raw_message: String,
-    pub font: i32,
+    pub font: i64,
     pub sender: GroupMessageSender,
 }
 #[derive(Deserialize, Debug, Clone, Hash, PartialEq, Eq)]

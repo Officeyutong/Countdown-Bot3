@@ -109,7 +109,7 @@ impl BotPlugin for BroadcastPlugin {
         PluginMeta {
             author: String::from("officeyutong"),
             description: String::from("群广播"),
-            version: String::from("2.0"),
+            version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
     async fn on_event(&mut self, _event: EventContainer) -> HookResult<()> {
