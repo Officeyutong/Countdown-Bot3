@@ -54,8 +54,10 @@ impl Music163Plugin {
         let send_share = args.is_present("share");
         let use_id = args.is_present("id");
         let keyword = args
-            .value_of("KEYWORD")
-            .ok_or(anyhow!("请输入查询关键字!"))?;
+            .values_of("KEYWORD")
+            .ok_or(anyhow!("请输入查询关键字!"))?
+            .collect::<Vec<&str>>()
+            .join(" ");
         let flags = [send_record, send_share, send_url];
         let mut true_count = 0;
         for x in flags {
@@ -73,9 +75,9 @@ impl Music163Plugin {
             }
         }
         let music_id = if use_id {
-            i64::from_str_radix(keyword, 10)?
+            i64::from_str_radix(&keyword, 10)?
         } else {
-            let search_result = self.search_music(keyword).await?;
+            let search_result = self.search_music(&keyword).await?;
             info!("{:?}", search_result);
             if search_result.is_empty() {
                 return Err(anyhow!("搜索结果为空!").into());

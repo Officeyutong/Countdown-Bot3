@@ -129,11 +129,12 @@ impl BotPlugin for Music163Plugin {
         use clap::{App, Arg};
         let parse_result = App::new("music")
             .help_message("显示帮助信息")
+            .before_help("网易云音乐搜歌")
             .arg(
                 Arg::with_name("KEYWORD")
                     .help("搜索关键词")
                     .required(true)
-                    .index(1),
+                    .multiple(true),
             )
             .arg(
                 Arg::with_name("id")
@@ -161,6 +162,7 @@ impl BotPlugin for Music163Plugin {
             )
             .setting(clap::AppSettings::ColorNever)
             .setting(clap::AppSettings::NoBinaryName)
+            .setting(clap::AppSettings::DisableVersion)
             .get_matches_from_safe(args);
         match parse_result {
             Ok(parse_ret) => {
