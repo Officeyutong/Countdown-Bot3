@@ -324,9 +324,13 @@ fn handle_track(
     let mut total_minutes = 0.0f64;
     for note in track.iter() {
         let (note_name, duration) = note.split_once(".").ok_or(anyhow!("非法音符: {}", note))?;
-        let mut parsed_duration: f64 = format!("0{}", duration)
-            .parse()
-            .map_err(|_| anyhow!("非法周期: {}", duration))?;
+        let mut parsed_duration: f64 = (if duration.starts_with(".") {
+            format!("0{}", duration)
+        } else {
+            duration.to_string()
+        })
+        .parse()
+        .map_err(|_| anyhow!("非法周期: {}", duration))?;
         if let Some(v) = &beats {
             parsed_duration = (*v) as f64 / parsed_duration;
         }
