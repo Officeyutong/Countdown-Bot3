@@ -7,6 +7,8 @@ pub struct CountdownBotConfig {
     pub reconnect_interval: u32,
     pub command_prefix: Vec<String>,
     pub ignored_plugins: Vec<String>,
+    pub blacklist_users: Vec<i64>,
+    pub command_cooldown: u64,
 }
 
 impl CountdownBotConfig {
@@ -18,6 +20,8 @@ impl CountdownBotConfig {
             reconnect_interval: 5,
             command_prefix: vec![String::from("--"), String::from("!!")],
             ignored_plugins: vec![],
+            blacklist_users: vec![],
+            command_cooldown: 0,
         }
     }
 }

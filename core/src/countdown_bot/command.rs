@@ -1,6 +1,9 @@
-use super::event::{
-    message::{GroupMessageEvent, PrivateMessageEvent},
-    EventContainer,
+use super::{
+    client::ResultType,
+    event::{
+        message::{GroupMessageEvent, PrivateMessageEvent},
+        EventContainer,
+    },
 };
 use anyhow::anyhow;
 use std::{
@@ -102,6 +105,7 @@ pub struct CommandManager {
     pub command_map: BTreeMap<String, Arc<Command>>,
     alias_map: HashMap<String, String>,
     curr_plugin_name: String,
+    pub last_execute: HashMap<String, HashMap<String, u64>>,
 }
 impl CommandManager {
     pub fn update_plugin_name(&mut self, s: String) {
@@ -112,6 +116,7 @@ impl CommandManager {
             alias_map: HashMap::new(),
             command_map: BTreeMap::new(),
             curr_plugin_name: String::from(""),
+            last_execute: HashMap::new(),
         }
     }
     pub fn get_command(
@@ -125,6 +130,28 @@ impl CommandManager {
         } else {
             return Err(Box::from(anyhow::anyhow!("Command not found: {}", name)));
         }
+    }
+    pub fn touch_command_and_test_timeout(
+        &mut self,
+        name: &str,
+        cooldown: u64,
+        sender: &SenderType,
+    ) -> ResultType<bool> {
+        let curr_command = self
+            .last_execute
+            .get_mut(name)
+            .ok_or(anyhow!("Invalid command: {}", name))?;
+        let ident = sender.generate_identifier();
+        let last_execute = *curr_command.get(&ident).unwrap_or(&0);
+        let now_timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)?
+            .as_secs();
+        let diff = now_timestamp - last_execute;
+        if diff < cooldown {
+            return Ok(false);
+        }
+        curr_command.insert(ident, now_timestamp);
+        return Ok(true);
     }
     pub fn register_command(&mut self, cmd: Command) -> Result<(), Box<dyn std::error::Error>> {
         let updated_cmd = if let None = &cmd.plugin_name {
@@ -158,12 +185,15 @@ impl CommandManager {
             self.alias_map
                 .insert(alias.clone(), updated_cmd.command_name.clone());
         }
+        let cmd_name = updated_cmd.command_name.clone();
         self.command_map
-            .insert(updated_cmd.command_name.clone(), Arc::new(updated_cmd));
+            .insert(cmd_name.clone(), Arc::new(updated_cmd));
+        self.last_execute
+            .insert(cmd_name.clone(), HashMap::new());
         return Ok(());
     }
 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct ConsoleSender {
     pub line: String,
 }
@@ -190,9 +220,19 @@ impl CommandSender {
         }
     }
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum SenderType {
     Console(ConsoleSender),
     Private(PrivateMessageEvent),
     Group(GroupMessageEvent),
+}
+
+impl SenderType {
+    pub fn generate_identifier(&self) -> String {
+        match self {
+            SenderType::Console(_) => "console".to_string(),
+            SenderType::Private(v) => format!("private:{}", v.user_id),
+            SenderType::Group(v) => format!("group:{}", v.user_id),
+        }
+    }
 }
