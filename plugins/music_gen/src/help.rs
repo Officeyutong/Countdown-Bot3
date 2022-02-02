@@ -1,4 +1,4 @@
-pub(crate) const HELP_STR: &str = r###"本功能基于PySynth，通过numpy输出wav的方式生成音频流。
+pub(crate) const HELP_STR: &str = r###"本功能基于PySynth(Rust重制)，通过ndarray输出wav的方式生成音频流。
 
 使用方式:
 musicgen [--参数1] [值1] [--参数2] [值2]... [音轨1:音符1] [音轨1:音符2].... | [音轨2:音符1] [音轨2:音符2...]

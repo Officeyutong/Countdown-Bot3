@@ -54,7 +54,7 @@ impl MusicGenPlugin {
             .arg(
                 Arg::new("download")
                     .long("download")
-                    .short('f')
+                    .short('d')
                     .help("下载音乐"),
             )
             .arg(

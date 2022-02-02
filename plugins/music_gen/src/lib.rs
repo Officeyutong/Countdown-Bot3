@@ -6,7 +6,7 @@ use config::MusicGenConfig;
 use countdown_bot3::{
     countdown_bot::{
         bot,
-        client::CountdownBotClient,
+        client::{CountdownBotClient, ResultType},
         command::{Command, SenderType},
         event::EventContainer,
         plugin::{BotPlugin, HookResult, PluginMeta},
@@ -14,7 +14,9 @@ use countdown_bot3::{
     },
     export_static_plugin,
 };
-use tokio::sync::Semaphore;
+use reqwest::{header::HeaderValue, StatusCode};
+use salvo::{prelude::FlowCtrl, Depot, Handler, Request, Response};
+use tokio::{sync::Semaphore, task::JoinHandle};
 static PLUGIN_NAME: &str = "music_gen";
 
 mod cache;
@@ -31,6 +33,7 @@ struct MusicGenPlugin {
     config: Option<MusicGenConfig>,
     semaphore: Option<Arc<tokio::sync::Semaphore>>,
     redis_client: Option<Arc<redis::Client>>,
+    join_handle: Option<JoinHandle<()>>,
 }
 impl Default for MusicGenPlugin {
     fn default() -> Self {
@@ -39,6 +42,7 @@ impl Default for MusicGenPlugin {
             config: Default::default(),
             semaphore: None,
             redis_client: None,
+            join_handle: None,
         }
     }
 }
@@ -65,7 +69,10 @@ impl BotPlugin for MusicGenPlugin {
                 .description("生成音乐 | 使用 musicgen --help 查看帮助"),
         )
         .unwrap();
-
+        self.join_handle = Some(start_salvo(
+            self.redis_client.as_ref().unwrap().clone(),
+            self.config.clone().unwrap(),
+        ));
         Ok(())
     }
     fn on_before_start(
@@ -77,6 +84,9 @@ impl BotPlugin for MusicGenPlugin {
         Ok(())
     }
     async fn on_disable(&mut self) -> HookResult<()> {
+        if let Some(v) = &self.join_handle {
+            v.abort();
+        }
         Ok(())
     }
     fn get_meta(&self) -> PluginMeta {
@@ -109,3 +119,62 @@ impl BotPlugin for MusicGenPlugin {
 }
 
 export_static_plugin!(PLUGIN_NAME, MusicGenPlugin::default());
+
+fn start_salvo(redis_client: Arc<redis::Client>, config: MusicGenConfig) -> JoinHandle<()> {
+    use salvo::prelude::*;
+    let router = Router::with_path("music_gen/download/<hash>").get(SimpleHandler { redis_client });
+    return tokio::spawn(async move {
+        Server::new(TcpListener::bind(&format!(
+            "{}:{}",
+            config.download.bind_ip, config.download.bind_port
+        )))
+        .serve(router)
+        .await
+    });
+}
+
+struct SimpleHandler {
+    redis_client: Arc<redis::Client>,
+}
+impl SimpleHandler {
+    pub(crate) async fn get_data(&self, hash: &str) -> ResultType<Vec<u8>> {
+        let mut conn = self.redis_client.clone().get_async_connection().await?;
+        use redis::AsyncCommands;
+        let key = cache::make_key(hash);
+        if !conn.exists(&key).await? {
+            return Err(anyhow!("Invalid hash!").into());
+        }
+        let resp: Vec<u8> = conn.get(&key).await?;
+        return Ok(resp);
+    }
+}
+#[async_trait::async_trait]
+impl Handler for SimpleHandler {
+    async fn handle(
+        &self,
+        req: &mut Request,
+        _depot: &mut Depot,
+        res: &mut Response,
+        _ctrl: &mut FlowCtrl,
+    ) {
+        if let Some(hash) = req.get_param::<String>("hash") {
+            match self.get_data(&hash).await {
+                Ok(v) => {
+                    res.headers_mut().append(
+                        "Content-Disposition",
+                        HeaderValue::from_str(&format!("attachment; filename={}.wav", hash))
+                            .unwrap(),
+                    );
+                    res.render_binary(HeaderValue::from_static("audio/wave"), &v[..])
+                }
+                Err(e) => {
+                    res.set_status_code(StatusCode::NOT_FOUND);
+                    res.render_plain_text(&format!("Error: {}", e));
+                }
+            };
+        } else {
+            res.set_status_code(StatusCode::BAD_REQUEST);
+            res.render_plain_text("Param required");
+        }
+    }
+}

@@ -1,4 +1,4 @@
-use std::ops::{AddAssign, MulAssign};
+// use std::ops::{AddAssign, MulAssign};
 
 use crate::pysynth::pysynth_b::{ATT_BASS, ATT_LEN, ATT_TREB, DECAY, HARMTAB};
 
@@ -141,14 +141,31 @@ impl WaveRenderer {
         };
         let dec_ind = (self.leg_stac * q as f64) as usize;
 
-        new.slice_mut(s![dec_ind..]).mul_assign(
-            &Array1::<f64>::range(0.0, raw_note as f64 - dec_ind as f64, 1.0)
-                .mapv(|a| (-a / 3000.0).exp()),
-        );
+        // new.slice_mut(s![dec_ind..]).mul_assign(
+        //     &Array1::<f64>::range(0.0, raw_note as f64 - dec_ind as f64, 1.0)
+        //         .mapv(|a| (-a / 3000.0).exp()),
+        // );
+        Zip::from(&mut new.slice_mut(s![dec_ind..]))
+            .and(&Array1::<f64>::range(
+                0.0,
+                raw_note as f64 - dec_ind as f64,
+                1.0,
+            ))
+            .par_for_each(|c, &a| {
+                *c *= (-a / 3000.0).exp();
+            });
         let snd_len = snd_len.min(raw_note) as usize;
-        let right = (&new.slice(s![..snd_len]) * (&fac) * vol)
-            * Array1::<f64>::range(0.0, snd_len as f64, 1.0)
-                .mapv(|a| (2.0 * PI * a / schweb / 32.0).sin() * schweb_amp + 1.0);
-        data.slice_mut(s![pos..pos + snd_len]).add_assign(&right);
+        // let right = (&new.slice(s![..snd_len]) * (&fac) * vol)
+        //     * Array1::<f64>::range(0.0, snd_len as f64, 1.0)
+        //         .mapv(|a| (2.0 * PI * a / schweb / 32.0).sin() * schweb_amp + 1.0);
+        // data.slice_mut(s![pos..pos + snd_len]).add_assign(&right);
+        Zip::from(&mut data.slice_mut(s![pos..pos + snd_len]))
+            .and(&Array1::<f64>::range(0.0, snd_len as f64, 1.0))
+            .and(&new.slice(s![..snd_len]))
+            .and(&fac)
+            .par_for_each(|data, &a, &new, &fac| {
+                *data +=
+                    new * fac * vol * ((2.0 * PI * a / schweb / 32.0).sin() * schweb_amp + 1.0);
+            });
     }
 }

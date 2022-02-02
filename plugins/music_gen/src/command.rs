@@ -8,7 +8,7 @@ use countdown_bot3::countdown_bot::{
     client::{CountdownBotClient, ResultType},
     command::SenderType,
 };
-use log::info;
+use log::{debug, info};
 use tokio::sync::Semaphore;
 use wav::{BitDepth, Header};
 
@@ -102,6 +102,7 @@ pub(crate) async fn generate_music(
         }
     };
     let will_download = args.is_present("download");
+    info!("Will download = {}", will_download);
     let inverse_beats = if args.is_present("inverse") {
         Some(if let Some(v) = args.value_of("beats") {
             i64::from_str_radix(v, 10).map_err(|_| anyhow!("非法beats: {}", v))?
@@ -297,6 +298,19 @@ pub(crate) async fn generate_music(
         )
         .await
         .map_err(|e| anyhow!("存储到Redis时发生错误: {}", e))?;
+    }
+    if will_download {
+        client
+            .quick_send_by_sender(sender, &{
+                let s = format!(
+                    "下载地址 ({} 秒内有效): {}",
+                    config.cache_timeout,
+                    config.download.template_url.replace("[hash]", &this_hash),
+                );
+                debug!("Download message: {}", s);
+                s
+            })
+            .await?;
     }
     return Ok(());
     // todo!();

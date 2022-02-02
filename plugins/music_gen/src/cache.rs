@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use countdown_bot3::countdown_bot::client::ResultType;
 use redis::AsyncCommands;
-fn make_key(hash: &str) -> String {
+pub fn make_key(hash: &str) -> String {
     format!("countdownbot-music-{}", hash)
 }
 pub async fn check_from_cache(
