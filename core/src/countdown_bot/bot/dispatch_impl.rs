@@ -60,7 +60,10 @@ impl CountdownBot {
     pub async fn dispatch_command(&mut self, sender: CommandSender) {
         let parsed_sender = sender.parse_sender().unwrap();
         if self.in_command_blacklist_check(&parsed_sender) {
-            info!("Ignoring command call from: {}", parsed_sender.generate_identifier());
+            info!(
+                "Ignoring command call from: {}",
+                parsed_sender.generate_identifier()
+            );
             return;
         }
         let mut is_console = false;
@@ -89,7 +92,11 @@ impl CountdownBot {
             .get_command(&String::from(splitted[0]))
         {
             Ok(cmd) => {
-                info!("Executing command: {}", cmd_line);
+                info!(
+                    "<{}> issueing command: {}",
+                    parsed_sender.generate_sender_message(),
+                    cmd_line
+                );
                 match self.command_manager.touch_command_and_test_timeout(
                     cmd.command_name.as_str(),
                     self.config.command_cooldown,

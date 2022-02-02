@@ -188,8 +188,7 @@ impl CommandManager {
         let cmd_name = updated_cmd.command_name.clone();
         self.command_map
             .insert(cmd_name.clone(), Arc::new(updated_cmd));
-        self.last_execute
-            .insert(cmd_name.clone(), HashMap::new());
+        self.last_execute.insert(cmd_name.clone(), HashMap::new());
         return Ok(());
     }
 }
@@ -233,6 +232,23 @@ impl SenderType {
             SenderType::Console(_) => "console".to_string(),
             SenderType::Private(v) => format!("private:{}", v.user_id),
             SenderType::Group(v) => format!("group:{}", v.user_id),
+        }
+    }
+    pub fn generate_sender_message(&self) -> String {
+        match self {
+            SenderType::Console(_) => "Console".to_string(),
+            SenderType::Private(p) => format!(
+                "Private: user(id: {}, nickname: \"{}\")",
+                p.user_id,
+                p.sender.nickname.clone().unwrap_or("".to_string())
+            ),
+            SenderType::Group(e) => format!(
+                "Group: group(id: {}), user(id: {}, card: \"{}\", nickname: \"{}\")",
+                e.group_id,
+                e.sender.user_id.clone().unwrap_or(-1 as i64),
+                e.sender.card.clone().unwrap_or("".to_string()),
+                e.sender.nickname.clone().unwrap_or("".to_string()),
+            ),
         }
     }
 }
