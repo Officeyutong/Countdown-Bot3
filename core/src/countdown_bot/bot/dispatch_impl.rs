@@ -89,7 +89,7 @@ impl CountdownBot {
             .get_command(&String::from(splitted[0]))
         {
             Ok(cmd) => {
-                info!("Executing command: {}", cmd.command_name);
+                info!("Executing command: {}", cmd_line);
                 match self.command_manager.touch_command_and_test_timeout(
                     cmd.command_name.as_str(),
                     self.config.command_cooldown,
