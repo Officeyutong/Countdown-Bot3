@@ -23,8 +23,8 @@ impl SignInPlugin {
         let db = self.database.as_ref().unwrap().lock().await;
         let query_result = db
             .query_row(
-                "SELECT * FROM SIGNINS\
-         WHERE GROUP_ID = ? AND USER_ID = ?\
+                "SELECT * FROM SIGNINS \
+         WHERE GROUP_ID = ? AND USER_ID = ? \
           ORDER BY TIME DESC LIMIT 1",
                 params![group_id, user_id],
                 |r| {
