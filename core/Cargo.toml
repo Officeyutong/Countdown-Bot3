@@ -1,6 +1,6 @@
 [package]
 name = "countdown-bot3"
-version = "0.1.1"
+version = "1.0.0"
 authors = ["officeyutong <officeyutong@163.com>"]
 edition = "2021"
 build = "build.rs"

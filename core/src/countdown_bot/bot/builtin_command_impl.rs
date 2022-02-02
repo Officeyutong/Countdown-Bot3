@@ -45,9 +45,12 @@ impl CountdownBot {
         self.create_client()
             .quick_send_by_sender(
                 &sender,
-                r#"Countdown-Bot 3
+                &format!(
+                    r#"Countdown-Bot 3, version {}
 By MikuNotFoundException
 https://github.com/Officeyutong/Countdown-Bot3"#,
+                    env!("CARGO_PKG_VERSION")
+                ),
             )
             .await
             .ok();
