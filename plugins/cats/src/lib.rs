@@ -180,6 +180,7 @@ impl BotPlugin for CatsPlugin {
                             .required(true)
                             .index(1),
                     )
+                    .setting(clap::AppSettings::ColorNever)
                     .setting(clap::AppSettings::NoBinaryName)
                     .setting(clap::AppSettings::DisableVersion)
                     .get_matches_from_safe(args);

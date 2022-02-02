@@ -159,6 +159,7 @@ impl BotPlugin for Music163Plugin {
                     .long("record")
                     .help("发送录音(默认)"),
             )
+            .setting(clap::AppSettings::ColorNever)
             .setting(clap::AppSettings::NoBinaryName)
             .get_matches_from_safe(args);
         match parse_result {

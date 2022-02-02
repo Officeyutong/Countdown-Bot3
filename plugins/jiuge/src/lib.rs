@@ -153,6 +153,7 @@ impl BotPlugin for JiugePlugin {
                     .required(true)
                     .index(1),
             )
+            .setting(clap::AppSettings::ColorNever)
             .setting(clap::AppSettings::NoBinaryName)
             .before_help(HELP_STRING)
             .get_matches_from_safe(args);

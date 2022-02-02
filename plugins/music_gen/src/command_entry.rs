@@ -85,6 +85,7 @@ impl MusicGenPlugin {
             )
             .setting(clap::AppSettings::NoBinaryName)
             .setting(clap::AppSettings::DisableVersionFlag)
+            .color(clap::ColorChoice::Never)
             .try_get_matches_from(
                 args.join(" ")
                     .split_whitespace()
