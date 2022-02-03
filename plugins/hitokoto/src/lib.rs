@@ -11,6 +11,7 @@ use countdown_bot3::{
     },
     export_static_plugin,
 };
+use log::info;
 use serde::{Deserialize, Serialize};
 static PLUGIN_NAME: &str = "hitokoto";
 
@@ -168,10 +169,13 @@ impl BotPlugin for HitokotoPlugin {
         } else {
             cfg.list_local.clone()
         };
+
         for group in groups.iter() {
             let client = self.client.clone().unwrap();
             let gid = i64::from_str_radix(group, 10)?;
+            info!("Sending hitokoto to group {}", gid);
             let r = random_hitokoto().await?;
+            info!("Value: {:#?}", r);
             client
                 .clone()
                 .send_group_msg(gid, r.generate_message().as_str(), false)
