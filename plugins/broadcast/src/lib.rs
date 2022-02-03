@@ -12,11 +12,11 @@ use countdown_bot3::{
     },
     export_static_plugin, initialize_plugin_logger,
 };
-use log::{debug, error};
+use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 static PLUGIN_NAME: &str = "broadcast";
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct BroadcastEntry {
     pub name: String,
     // Y-M-D
@@ -36,7 +36,7 @@ impl BroadcastEntry {
     }
 }
 type BroadcastMap = HashMap<String, Vec<BroadcastEntry>>;
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct BroadcastPluginConfig {
     pub broadcast_hour: u32,
     pub broadcast_minute: u32,
@@ -87,6 +87,7 @@ impl BotPlugin for BroadcastPlugin {
         self.config = Some(load_config_or_save_default::<BroadcastPluginConfig>(
             &bot.ensure_plugin_data_dir(PLUGIN_NAME)?,
         )?);
+        debug!("Broadcast config:\n{:#?}", self.config.as_ref().unwrap());
         let cfg = self.config.as_ref().unwrap();
         bot.register_schedule(
             (cfg.broadcast_hour, cfg.broadcast_minute),
@@ -141,9 +142,9 @@ impl BotPlugin for BroadcastPlugin {
     ) -> Result<(), Box<dyn std::error::Error>> {
         if let SenderType::Group(evt) = sender {
             let group_id = evt.group_id;
-            let broadcast_data = self.ensure_broadcast_data().await.unwrap();
+            let broadcast_data = self.ensure_broadcast_data().await?;
             if let Some((group_str, data)) = broadcast_data.get_key_value(&group_id.to_string()) {
-                self.broadcast_at_group(group_str, data).await.unwrap();
+                self.broadcast_at_group(group_str, data).await?;
             } else {
                 return Err(anyhow!("当前群无广播数据!").into());
             }
@@ -176,7 +177,7 @@ impl BroadcastPlugin {
     ) -> ResultType<()> {
         let client = self.client.clone().unwrap();
         let ret = generate_broadcast_content(broadcasts)?;
-
+        info!("Broadcasting at group {}:\n{:#?}", group, ret);
         for item in ret.iter() {
             client
                 .send_group_msg(i64::from_str_radix(group, 10)?, item, false)
