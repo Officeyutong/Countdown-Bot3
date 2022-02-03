@@ -12,7 +12,7 @@ use countdown_bot3::{
     },
     export_static_plugin, initialize_plugin_logger,
 };
-use log::debug;
+use log::{debug, error};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 static PLUGIN_NAME: &str = "broadcast";
@@ -126,7 +126,9 @@ impl BotPlugin for BroadcastPlugin {
     async fn on_schedule_loop(&mut self, _name: &str) -> HookResult<()> {
         let broadcast_data = self.ensure_broadcast_data().await?;
         for (group, data) in broadcast_data.iter() {
-            self.broadcast_at_group(group.as_str(), data).await?;
+            if let Err(e) = self.broadcast_at_group(group.as_str(), data).await {
+                error!("群 {} 广播失败:\n{}", group, e);
+            }
         }
         Ok(())
     }
