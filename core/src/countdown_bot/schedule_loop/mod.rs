@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use chrono::{DateTime, Local, Timelike};
-use log::{info, trace};
+use log::{error, info, trace};
 
 use super::{bot::StopSignalReceiverType, plugin::BotPluginWrapped};
 #[derive(Clone)]
@@ -58,12 +58,18 @@ impl ScheduleLoopManager {
                     let plugin_inst = item.plugin.clone();
                     let name_cloned = item.name.clone();
                     tokio::spawn(async move {
-                        plugin_inst
+                        if let Err(e) = plugin_inst
                             .lock()
                             .await
                             .on_schedule_loop(name_cloned.as_str())
                             .await
-                            .ok();
+                        {
+                            error!(
+                                "Error handling schedule loop {}:\n{}",
+                                name_cloned.as_str(),
+                                e
+                            );
+                        }
                     });
                 }
             }
