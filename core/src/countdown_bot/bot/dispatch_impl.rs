@@ -12,9 +12,9 @@ use super::CountdownBot;
 impl CountdownBot {
     pub async fn dispatch_event(&mut self, event: &EventContainer) {
         if let Event::Message(ref msg_evt) = event.event {
-            let msg_line = match msg_evt {
-                MessageEvent::Private(e) => &e.message,
-                MessageEvent::Group(e) => &e.message,
+            let (msg_line, sender) = match msg_evt {
+                MessageEvent::Private(e) => (&e.message, SenderType::Private(e.clone())),
+                MessageEvent::Group(e) => (&e.message, SenderType::Group(e.clone())),
                 MessageEvent::Unknown => return,
             };
             let mut ok_for_command = false;
@@ -28,6 +28,7 @@ impl CountdownBot {
                     .await;
                 return;
             }
+            info!("Message<{}>: {}", sender.generate_sender_message(), msg_line);
         }
         for (_, val) in self.plugin_manager.plugins.iter() {
             let plugin_instance_ref = val.plugin_instance.clone();
