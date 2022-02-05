@@ -68,29 +68,29 @@ impl BotPlugin for CoupletPlugin {
         args: Vec<String>,
         sender: &SenderType,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        if let Some(keyword) = args.get(0) {
-            #[derive(Deserialize)]
-            struct Resp {
-                output: String,
-            }
-            let resp = reqwest::get(format!(
-                "https://ai-backend.binwang.me/chat/couplet/{}",
-                keyword
-            ))
-            .await?;
-            let output = serde_json::from_str::<Resp>(resp.text().await?.as_str())?;
-            self.client
-                .clone()
-                .unwrap()
-                .quick_send_by_sender(
-                    sender,
-                    format!("上联: {}\n下联: {}", keyword, output.output).as_str(),
-                )
-                .await?;
-            Ok(())
-        } else {
-            Err(anyhow!("请输入上联!").into())
+        if args.is_empty() {
+            return Err(anyhow!("请输入上联!").into());
         }
+        let keyword = args[0..].join(" ");
+        #[derive(Deserialize)]
+        struct Resp {
+            output: String,
+        }
+        let resp = reqwest::get(format!(
+            "https://ai-backend.binwang.me/chat/couplet/{}",
+            keyword
+        ))
+        .await?;
+        let output = serde_json::from_str::<Resp>(resp.text().await?.as_str())?;
+        self.client
+            .clone()
+            .unwrap()
+            .quick_send_by_sender(
+                sender,
+                format!("上联: {}\n下联: {}", keyword, output.output).as_str(),
+            )
+            .await?;
+        Ok(())
     }
 }
 

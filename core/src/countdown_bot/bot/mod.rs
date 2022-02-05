@@ -9,6 +9,7 @@ use super::config::CountdownBotConfig;
 use super::plugin::{PluginManager, PluginRegisterCallback};
 use super::schedule_loop::ScheduleLoopManager;
 use super::state_hook::StateHookManager;
+use super::utils::SubUrlWrapper;
 use config::Config;
 use futures_util::stream::{SplitSink, SplitStream};
 use log::{debug, error, info};
@@ -32,7 +33,6 @@ pub struct CountdownBot {
     stop: bool,
     write_stream: WriteStreamType,
     read_stream: ReadStreamType,
-    // receiver_map: ReceiverMap,
     client: Option<CountdownBotClient>,
     stop_signal_sender: Option<tokio::sync::watch::Sender<bool>>,
     stop_signal_receiver: Option<StopSignalReceiverType>,
@@ -41,6 +41,7 @@ pub struct CountdownBot {
     state_manager: StateHookManager,
     schedule_loop_manager: ScheduleLoopManager,
     plugin_static_register_hooks: Vec<PluginRegisterCallback>,
+    salvo_router: Option<salvo::Router>,
 }
 mod builtin_command_impl;
 mod dispatch_impl;
@@ -72,12 +73,20 @@ impl CountdownBot {
     pub fn get_max_log_level(&self) -> log::LevelFilter {
         return self.max_log_level.unwrap().clone();
     }
-
     pub fn register_state_hook(&mut self) {
         self.state_manager.register_state_hook();
     }
     pub fn add_plugin_static_register_hook(&mut self, hook: PluginRegisterCallback) {
         self.plugin_static_register_hooks.push(hook);
+    }
+    pub fn get_salvo_router(&mut self) -> &mut salvo::Router {
+        return self
+            .salvo_router
+            .as_mut()
+            .expect("Cannot get router after the bot has started!");
+    }
+    pub fn create_url_wrapper(&self) -> SubUrlWrapper {
+        return SubUrlWrapper::new(&self.config.web_server.template_prefix);
     }
     pub fn new(sys_root: &path::PathBuf) -> CountdownBot {
         CountdownBot {
@@ -99,6 +108,7 @@ impl CountdownBot {
             state_manager: StateHookManager::default(),
             schedule_loop_manager: ScheduleLoopManager::new(),
             plugin_static_register_hooks: vec![],
+            salvo_router: Some(salvo::Router::new()),
         }
     }
     pub async fn init(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>> {

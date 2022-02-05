@@ -18,3 +18,5 @@ rustpython-vm = { git = "https://github.com/RustPython/RustPython", features = [
 rustpython-stdlib = { git = "https://github.com/RustPython/RustPython", rev = "bd295e0f" }
 futures = "0.3.19"
 num-bigint = "0.4.3"
+salvo = "0.16.8"
+md5 = "0.7.0"

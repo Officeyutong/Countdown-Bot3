@@ -1,21 +1,17 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-#[derive(Deserialize, Serialize, Clone)]
-pub struct DownloadInfo {
-    pub bind_ip: String,
-    pub bind_port: u16,
-    pub template_url: String,
-}
-impl Default for DownloadInfo {
-    fn default() -> Self {
-        Self {
-            bind_ip: "127.0.0.1".to_string(),
-            bind_port: 5001,
-            template_url: "http://127.0.0.1:5001/music_gen/download/[hash]".to_string(),
-        }
-    }
-}
+// #[derive(Deserialize, Serialize, Clone)]
+// pub struct DownloadInfo {
+    
+// }
+// impl Default for DownloadInfo {
+//     fn default() -> Self {
+//         Self {
+//             template_url: "http://127.0.0.1:5001/music_gen/download/[hash]".to_string(),
+//         }
+//     }
+// }
 #[derive(Deserialize, Serialize, Clone)]
 pub struct MusicGenConfig {
     pub default_bpm: u64,
@@ -29,7 +25,7 @@ pub struct MusicGenConfig {
     pub max_length_in_seconds: u64,
     pub max_execute_sametime: u64,
     pub use_cache: bool,
-    pub download: DownloadInfo,
+    // pub download: DownloadInfo,
 }
 impl Default for MusicGenConfig {
     fn default() -> Self {
@@ -45,7 +41,7 @@ impl Default for MusicGenConfig {
             redis_uri: String::from("redis://127.0.0.1/0"),
             max_execute_sametime: 2,
             use_cache: false,
-            download: DownloadInfo::default(),
+            // download: DownloadInfo::default(),
         }
     }
 }

@@ -7,6 +7,7 @@ use clap::ArgMatches;
 use countdown_bot3::countdown_bot::{
     client::{CountdownBotClient, ResultType},
     command::SenderType,
+    utils::SubUrlWrapper,
 };
 use log::{debug, info};
 use tokio::sync::Semaphore;
@@ -33,6 +34,7 @@ impl MusicGenPlugin {
         let config = self.config.as_ref().unwrap().clone();
         let sender = sender.clone();
         let redis_client = self.redis_client.as_ref().unwrap().clone();
+        let url_wrapper = self.url_wrapper.clone().unwrap();
         tokio::spawn(async move {
             let msg = if let Err(e) = generate_music(
                 semaphore,
@@ -42,6 +44,7 @@ impl MusicGenPlugin {
                 &sender,
                 using_pasteboard,
                 redis_client,
+                url_wrapper,
             )
             .await
             {
@@ -63,6 +66,7 @@ pub(crate) async fn generate_music(
     sender: &SenderType,
     using_pasteboard: bool,
     redis_client: Arc<redis::Client>,
+    url_wrapper: SubUrlWrapper,
 ) -> ResultType<()> {
     let start_time = std::time::Instant::now();
     let _semaphore_permit = semaphore
@@ -308,7 +312,7 @@ pub(crate) async fn generate_music(
                 let s = format!(
                     "下载地址 ({} 秒内有效): {}",
                     config.cache_timeout,
-                    config.download.template_url.replace("[hash]", &this_hash),
+                    url_wrapper.get_sub_url(&format!("/music_gen/download/{}", this_hash)),
                 );
                 debug!("Download message: {}", s);
                 s

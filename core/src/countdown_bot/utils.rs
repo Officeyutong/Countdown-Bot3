@@ -1,5 +1,6 @@
 use config::Config;
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 pub fn load_config_or_save_default<'a, T>(data_path: &std::path::PathBuf) -> anyhow::Result<T>
 where
@@ -16,4 +17,19 @@ where
     cfg.merge(config::Config::try_from(&T::default())?)?;
     cfg.merge(config::File::from(config_file))?;
     Ok(cfg.try_into()?)
+}
+#[derive(Clone, Debug)]
+pub struct SubUrlWrapper {
+    url_prefix: Url,
+}
+impl SubUrlWrapper {
+    pub fn new(url: &str) -> Self {
+        Self {
+            url_prefix: url::Url::parse(url).unwrap(),
+        }
+    }
+    pub fn get_sub_url(&self, sub: &str) -> String {
+        let suburl = self.url_prefix.join(sub).unwrap();
+        return suburl.to_string();
+    }
 }

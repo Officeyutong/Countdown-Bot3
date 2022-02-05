@@ -5,18 +5,18 @@ use async_trait::async_trait;
 use config::MusicGenConfig;
 use countdown_bot3::{
     countdown_bot::{
-        bot,
+        bot::{self, CountdownBot},
         client::{CountdownBotClient, ResultType},
         command::{Command, SenderType},
         event::EventContainer,
         plugin::{BotPlugin, HookResult, PluginMeta},
-        utils::load_config_or_save_default,
+        utils::{load_config_or_save_default, SubUrlWrapper},
     },
     export_static_plugin,
 };
 use reqwest::{header::HeaderValue, StatusCode};
 use salvo::{prelude::FlowCtrl, Depot, Handler, Request, Response};
-use tokio::{sync::Semaphore, task::JoinHandle};
+use tokio::sync::Semaphore;
 static PLUGIN_NAME: &str = "music_gen";
 
 mod cache;
@@ -33,7 +33,7 @@ struct MusicGenPlugin {
     config: Option<MusicGenConfig>,
     semaphore: Option<Arc<tokio::sync::Semaphore>>,
     redis_client: Option<Arc<redis::Client>>,
-    join_handle: Option<JoinHandle<()>>,
+    url_wrapper: Option<SubUrlWrapper>,
 }
 impl Default for MusicGenPlugin {
     fn default() -> Self {
@@ -42,7 +42,7 @@ impl Default for MusicGenPlugin {
             config: Default::default(),
             semaphore: None,
             redis_client: None,
-            join_handle: None,
+            url_wrapper: None,
         }
     }
 }
@@ -69,10 +69,8 @@ impl BotPlugin for MusicGenPlugin {
                 .description("生成音乐 | 使用 musicgen --help 查看帮助"),
         )
         .unwrap();
-        self.join_handle = Some(start_salvo(
-            self.redis_client.as_ref().unwrap().clone(),
-            self.config.clone().unwrap(),
-        ));
+        self.url_wrapper = Some(bot.create_url_wrapper());
+        setup_salvo(bot, self.redis_client.as_ref().unwrap().clone());
         Ok(())
     }
     fn on_before_start(
@@ -84,9 +82,9 @@ impl BotPlugin for MusicGenPlugin {
         Ok(())
     }
     async fn on_disable(&mut self) -> HookResult<()> {
-        if let Some(v) = &self.join_handle {
-            v.abort();
-        }
+        // if let Some(v) = &self.join_handle {
+        //     v.abort();
+        // }
         Ok(())
     }
     fn get_meta(&self) -> PluginMeta {
@@ -120,17 +118,11 @@ impl BotPlugin for MusicGenPlugin {
 
 export_static_plugin!(PLUGIN_NAME, MusicGenPlugin::default());
 
-fn start_salvo(redis_client: Arc<redis::Client>, config: MusicGenConfig) -> JoinHandle<()> {
+fn setup_salvo(bot: &mut CountdownBot, redis_client: Arc<redis::Client>) {
     use salvo::prelude::*;
-    let router = Router::with_path("music_gen/download/<hash>").get(SimpleHandler { redis_client });
-    return tokio::spawn(async move {
-        Server::new(TcpListener::bind(&format!(
-            "{}:{}",
-            config.download.bind_ip, config.download.bind_port
-        )))
-        .serve(router)
-        .await
-    });
+    let router =
+        Router::with_path("/music_gen/download/<hash>").get(SimpleHandler { redis_client });
+    bot.get_salvo_router().routers_mut().push(router);
 }
 
 struct SimpleHandler {

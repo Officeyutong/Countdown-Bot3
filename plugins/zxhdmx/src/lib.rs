@@ -9,16 +9,16 @@ use async_trait::async_trait;
 use config::ZxhdmxConfig;
 use countdown_bot3::{
     countdown_bot::{
-        bot,
+        bot::{self, CountdownBot},
         client::{CountdownBotClient, ResultType},
         command::{Command, SenderType},
         event::{message::MessageEvent, Event, EventContainer},
         plugin::{BotPlugin, HookResult, PluginMeta},
-        utils::load_config_or_save_default,
+        utils::{load_config_or_save_default, SubUrlWrapper},
     },
     export_static_plugin,
 };
-use handle_impl::{event::handle_event, command::handle_command};
+use handle_impl::{command::handle_command, event::handle_event};
 use log::{debug, info};
 use pytypes::{
     wrapped_bot::{MyPyLogger, WrappedCountdownBot},
@@ -32,15 +32,19 @@ use rustpython_vm as pyvm;
 use serde_json::Value;
 use tokio::sync::RwLock;
 
+use crate::web::{GetDataHandler, SetDataHandler, TemplateGetter};
+
 static PLUGIN_NAME: &str = "zxhdmx";
 pub mod config;
 mod handle_impl;
 mod help_str;
 pub mod pytypes;
 pub mod utils;
+mod web;
 pub type DataType = Arc<RwLock<Value>>;
 pub type GameObjectType = Arc<Mutex<HashMap<i64, PyObjectRef>>>;
 pub type InprType = Arc<Mutex<pyvm::Interpreter>>;
+pub type HTMLTemplateType = Arc<Mutex<String>>;
 struct ZxhdmxPlugin {
     client: Option<CountdownBotClient>,
     config: Option<ZxhdmxConfig>,
@@ -49,6 +53,8 @@ struct ZxhdmxPlugin {
     game_data: DataType,
     game_module: Option<PyRef<PyModule>>,
     game_objects: GameObjectType,
+    url_wrapper: Option<SubUrlWrapper>,
+    html_template: HTMLTemplateType,
 }
 impl Default for ZxhdmxPlugin {
     fn default() -> Self {
@@ -66,6 +72,8 @@ impl Default for ZxhdmxPlugin {
             game_data: Arc::new(RwLock::new(Value::Null)),
             game_module: None,
             game_objects: Arc::new(Mutex::new(HashMap::new())),
+            url_wrapper: None,
+            html_template: Arc::new(Mutex::new(String::new())),
         }
     }
 }
@@ -87,6 +95,7 @@ impl BotPlugin for ZxhdmxPlugin {
             WrappedConfig::make_class(&vm.ctx);
             WrappedPlugin::make_class(&vm.ctx);
         });
+        self.url_wrapper = Some(bot.create_url_wrapper());
         init_files(self.data_dir.as_ref().unwrap()).expect("Failed to init files!");
         bot.register_command(
             Command::new("zxhdmx")
@@ -94,7 +103,13 @@ impl BotPlugin for ZxhdmxPlugin {
                 .description("进入真心话大冒险模式"),
         )
         .unwrap();
-
+        bot.register_command(
+            Command::new("zxhdmx-reload")
+                .console(true)
+                .description("重新加载zxhdmx的游戏内容数据"),
+        )
+        .unwrap();
+        self.setup_salvo(bot);
         Ok(())
     }
     fn on_before_start(
@@ -133,22 +148,8 @@ impl BotPlugin for ZxhdmxPlugin {
                 .unwrap(),
         );
         info!("Game module: {:#?}", self.game_module.as_ref().unwrap());
-
-        {
-            let _guard = tokio::runtime::Handle::current().enter();
-            let mut game_data = futures::executor::block_on(self.game_data.write());
-
-            *game_data = serde_json::from_str::<Value>(
-                std::fs::read_to_string(self.data_dir.as_ref().unwrap().join("data.json"))
-                    .map_err(|e| anyhow!("Failed to read data.json:\n{}", e))
-                    .unwrap()
-                    .as_str(),
-            )
-            .map_err(|e| anyhow!("Failed to parse data.json:\n{}", e))
-            .unwrap();
-            debug!("Game data:\n{:#?}", game_data);
-        }
-
+        self.reload_gamedata()?;
+        self.reload_template()?;
         return Ok(());
     }
     async fn on_disable(&mut self) -> HookResult<()> {
@@ -193,48 +194,109 @@ impl BotPlugin for ZxhdmxPlugin {
 
     async fn on_command(
         &mut self,
-        _command: String,
+        command: String,
         _args: Vec<String>,
         sender: &SenderType,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let (user_id, group_id) = match sender {
-            SenderType::Group(evt) => (evt.user_id, evt.group_id),
-            _ => todo!(),
-        };
-        if !self
-            .config
-            .as_ref()
-            .unwrap()
-            .enable_groups
-            .contains(&group_id)
-        {
-            return Err(anyhow!("当前群未启用本功能!").into());
+        if command.as_str() == "zxmdmx" {
+            let (user_id, group_id) = match sender {
+                SenderType::Group(evt) => (evt.user_id, evt.group_id),
+                _ => todo!(),
+            };
+            if !self
+                .config
+                .as_ref()
+                .unwrap()
+                .enable_groups
+                .contains(&group_id)
+            {
+                return Err(anyhow!("当前群未启用本功能!").into());
+            }
+            let local_client = self.client.clone().unwrap();
+            let local_game_data = self.game_data.clone();
+            let local_game_module = self.game_module.clone().unwrap();
+            let local_game_objects = self.game_objects.clone();
+            let local_inpr = self.py_inpr.clone();
+            let local_config = self.config.clone().unwrap();
+            tokio::task::spawn_blocking(move || {
+                return handle_command(
+                    user_id,
+                    group_id,
+                    local_client,
+                    local_game_data,
+                    local_game_module,
+                    local_game_objects,
+                    local_inpr,
+                    local_config,
+                )
+                .map_err(|e| anyhow!("{}", e));
+            })
+            .await??;
+        } else if command.as_str() == "zxhdmx-reload" {
+            self.reload_gamedata()?;
+            self.reload_template()?;
         }
-        let local_client = self.client.clone().unwrap();
-        let local_game_data = self.game_data.clone();
-        let local_game_module = self.game_module.clone().unwrap();
-        let local_game_objects = self.game_objects.clone();
-        let local_inpr = self.py_inpr.clone();
-        let local_config = self.config.clone().unwrap();
-        tokio::task::spawn_blocking(move || {
-            return handle_command(
-                user_id,
-                group_id,
-                local_client,
-                local_game_data,
-                local_game_module,
-                local_game_objects,
-                local_inpr,
-                local_config,
-            )
-            .map_err(|e| anyhow!("{}", e));
-        })
-        .await??;
+
         // self.handle_command(user_id, group_id).await?;
         return Ok(());
     }
 }
+impl ZxhdmxPlugin {
+    fn reload_template(&self) -> ResultType<()> {
+        let file_path = self.data_dir.as_ref().unwrap().join("edit.html");
+        *self.html_template.lock().unwrap() = if !file_path.exists() {
+            let html_str = include_str!("edit.html");
+            std::fs::write(file_path, html_str)
+                .map_err(|e| anyhow!("写出默认的 edit.html 时发生错误!\n{}", e))?;
+            html_str.to_string()
+        } else {
+            std::fs::read_to_string(file_path)
+                .map_err(|e| anyhow!("读取 edit.html 时发生错误!\n{}", e))?
+        };
 
+        return Ok(());
+    }
+    fn reload_gamedata(&self) -> ResultType<()> {
+        {
+            let _guard = tokio::runtime::Handle::current().enter();
+            let mut game_data = futures::executor::block_on(self.game_data.write());
+            *game_data = serde_json::from_str::<Value>(
+                std::fs::read_to_string(self.data_dir.as_ref().unwrap().join("data.json"))
+                    .map_err(|e| anyhow!("Failed to read data.json:\n{}", e))
+                    .unwrap()
+                    .as_str(),
+            )
+            .map_err(|e| anyhow!("Failed to parse data.json:\n{}", e))
+            .unwrap();
+            info!("Game data loaded.");
+            debug!("Game data:\n{:#?}", game_data);
+        }
+        return Ok(());
+    }
+    fn setup_salvo(&self, bot: &mut CountdownBot) {
+        use salvo::prelude::*;
+        let mut router = Router::with_path("zxhdmx");
+        router
+            .routers_mut()
+            .push(Router::with_path("set_data").post(SetDataHandler {
+                data: self.game_data.clone(),
+                config: self.config.clone().unwrap(),
+                data_dir: self.data_dir.clone().unwrap(),
+            }));
+        router
+            .routers_mut()
+            .push(Router::with_path("get_data").post(GetDataHandler {
+                data: self.game_data.clone(),
+                config: self.config.clone().unwrap(),
+            }));
+        router
+            .routers_mut()
+            .push(Router::with_path("edit").get(TemplateGetter {
+                data: self.html_template.clone(),
+            }));
+        bot.get_salvo_router().routers_mut().push(router);
+    }
+}
 export_static_plugin!(PLUGIN_NAME, ZxhdmxPlugin::default());
 fn init_files(dir_path: &PathBuf) -> ResultType<()> {
     {

@@ -15,6 +15,20 @@ use tokio_tungstenite::tungstenite::Message;
 
 impl CountdownBot {
     pub async fn run(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>> {
+        // 启动salvo服务器
+        {
+            let config = &self.config.web_server;
+            let bind = format!("{}:{}", config.bind_ip, config.bind_port);
+            let router = self.salvo_router.take().unwrap();
+            use salvo::prelude::*;
+            info!("Web server state: {:#?}", config);
+            if config.enable {
+                tokio::spawn(async move {
+                    info!("Running webserver..");
+                    Server::new(TcpListener::bind(&bind)).serve(router).await;
+                });
+            }
+        }
         use tokio_tungstenite::connect_async;
         use url::Url;
         let url_event = {

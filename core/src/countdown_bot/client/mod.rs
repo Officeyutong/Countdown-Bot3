@@ -51,7 +51,10 @@ impl CountdownBotClient {
     ) -> Result<Value, Box<dyn std::error::Error>> {
         let (tx, rx) = oneshot::channel::<SenderContainer>();
         let token = uuid::Uuid::new_v4().to_string();
-        debug!("Performing async api call: {}, params: {}", action, params);
+        debug!("Performing async api call: {}, params: {}", action, {
+            let s = params.to_string();
+            s[..s.len().min(1000)].to_string()
+        });
         self.request_sender.send(APICallRequest {
             action: String::from(action),
             payload: params.clone(),
@@ -73,7 +76,10 @@ impl CountdownBotClient {
     ) -> Result<Value, Box<dyn std::error::Error>> {
         let (tx, rx) = oneshot::channel::<SenderContainer>();
         let token = uuid::Uuid::new_v4().to_string();
-        debug!("Performing sync api call: {}, params: {}", action, params);
+        debug!("Performing sync api call: {}, params: {}", action, {
+            let s = params.to_string();
+            s[..s.len().min(1000)].to_string()
+        });
         self.request_sender.send(APICallRequest {
             action: String::from(action),
             payload: params.clone(),
