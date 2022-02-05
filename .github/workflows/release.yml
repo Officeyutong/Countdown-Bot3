@@ -10,7 +10,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build_ubuntu:
+  "build-ubuntu-x64":
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -25,7 +25,7 @@ jobs:
       with:
         name: "ubuntu-x86_64"
         path: "target/release/app"
-  build_windows:
+  "build-windows-x64":
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
@@ -36,3 +36,14 @@ jobs:
       with:
         name: "windows-x86_64"
         path: "target/release/app.exe"
+  "build-macos-x64":
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: cargo build --release
+    - name: Upload
+      uses: actions/upload-artifact@v2.3.1
+      with:
+        name: "macos-x86_64"
+        path: "target/release/app"
