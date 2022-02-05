@@ -225,7 +225,7 @@ pub(crate) async fn generate_music(
                 .await??,
             );
         }
-        let mut mid_val = Vec::<i32>::new();
+
         let mut final_output = Vec::<i16>::new();
 
         let max_len = rendered_data
@@ -233,20 +233,26 @@ pub(crate) async fn generate_music(
             .map(|v| v.len())
             .max()
             .ok_or(anyhow!("零个音轨，玩你妈呢？"))?;
-        mid_val.resize(max_len, 0);
+
         final_output.resize(max_len, 0);
         let volume_sum = volume
             .as_ref()
             .map(|v| v.iter().sum())
             .unwrap_or(rendered_data.len() as u32);
         info!("合并中..");
-        for (i, val) in rendered_data.iter().enumerate() {
-            let curr_volume = volume.as_ref().map(|v| v[i]).unwrap_or(1);
-            info!("音轨 {} 输出采样点数 {}", i + 1, val.len());
-            for (j, v) in val.iter().enumerate() {
-                mid_val[j] += curr_volume as i32 * *v as i32;
+        let mid_val = tokio::task::spawn_blocking(move || {
+            let mut mid_val = Vec::<i32>::new();
+            mid_val.resize(max_len, 0);
+            for (i, val) in rendered_data.into_iter().enumerate() {
+                let curr_volume = volume.as_ref().map(|v| v[i]).unwrap_or(1);
+                info!("音轨 {} 输出采样点数 {}", i + 1, val.len());
+                for (j, v) in val.iter().enumerate() {
+                    mid_val[j] += curr_volume as i32 * *v as i32;
+                }
             }
-        }
+            mid_val
+        })
+        .await?;
         for (i, v) in mid_val.iter().enumerate() {
             final_output[i] = (*v / volume_sum as i32) as i16;
         }
