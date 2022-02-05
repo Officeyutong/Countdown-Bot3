@@ -8,7 +8,7 @@ build = "build.rs"
 [dependencies]
 
 config = "0.11.0"
-tokio = { version = "1.15.0", features = ["full"] }
+tokio = { version = "1.16.1", features = ["full", "rt"] }
 log = "0.4.14"
 flexi_logger = "0.22.0"
 serde = { version = "1.0.132", features = ["derive"] }
@@ -25,6 +25,7 @@ uuid = { version = "0.8.2", features = ["v4"] }
 async-trait = "0.1.52"
 chrono = "0.4.19"
 serde_yaml = "0.8.23"
+paste = "1.0.6"
 
 [build-dependencies]
 rustc_version = "0.4.0"

@@ -182,7 +182,7 @@ pub(crate) async fn generate_music(
         let mut max_len: f64 = 0.0;
         for (index, track) in transformed_number.iter().enumerate() {
             // proessed_tracks.push();
-            let (data, length) = handle_track(&track[..], &inverse_beats, bpm)?;
+            let (data, length) = parse_track(&track[..], &inverse_beats, bpm)?;
             if length * 60.0 > config.max_length_in_seconds as f64 {
                 return Err(anyhow!(
                     "音轨 {} 的长度({}s)超出了长度限制 ({}s)",
@@ -209,13 +209,16 @@ pub(crate) async fn generate_music(
             )
             .await?;
         let mut rendered_data = Vec::<Vec<i16>>::new();
-        for (index, track) in processed_tracks.iter().enumerate() {
+        for (index, track) in processed_tracks.into_iter().enumerate() {
             info!("渲染音轨 {} 中.. 音符数 {}", index + 1, track.len());
             rendered_data.push(
-                WaveRenderer::default()
-                    .set_bpm(bpm as i32)
-                    .make_wav(&track[..])
-                    .map_err(|e| anyhow!("渲染音轨 {} 时发生错误:\n{}", index + 1, e))?,
+                tokio::task::spawn_blocking(move || {
+                    WaveRenderer::default()
+                        .set_bpm(bpm.clone() as i32)
+                        .make_wav(&track[..])
+                        .map_err(|e| anyhow!("渲染音轨 {} 时发生错误:\n{}", index.clone() + 1, e))
+                })
+                .await??,
             );
         }
         let mut mid_val = Vec::<i32>::new();
@@ -315,7 +318,7 @@ pub(crate) async fn generate_music(
     return Ok(());
     // todo!();
 }
-fn handle_track(
+fn parse_track(
     track: &[String],
     beats: &Option<i64>,
     bpm: u32,

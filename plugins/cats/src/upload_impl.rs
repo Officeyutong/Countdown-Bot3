@@ -106,7 +106,8 @@ impl CatsPlugin {
         conn.execute(
             "INSERT INTO CATS (USER_ID,UPLOAD_TIME,DATA,CHECKSUM) VALUES (?,?,?,?)",
             params![
-                uploader_id,
+                // 考虑以其他人的身份上传
+                as_qq.unwrap_or(uploader_id),
                 chrono::Local::now().timestamp(),
                 image_bytes,
                 image_hash

@@ -1,9 +1,8 @@
-use log::{info, trace};
+use self::message::MessageIdResp;
+use log::{debug, info};
 use serde::{de::DeserializeOwned, Deserialize};
 use serde_json::Value;
 use tokio::sync::{mpsc, oneshot};
-
-use self::message::MessageIdResp;
 
 use super::{command::SenderType, event::message::MessageEvent};
 
@@ -52,7 +51,7 @@ impl CountdownBotClient {
     ) -> Result<Value, Box<dyn std::error::Error>> {
         let (tx, rx) = oneshot::channel::<SenderContainer>();
         let token = uuid::Uuid::new_v4().to_string();
-        trace!("Performing api calling: {}, params: {}", action, params);
+        debug!("Performing async api call: {}, params: {}", action, params);
         self.request_sender.send(APICallRequest {
             action: String::from(action),
             payload: params.clone(),
@@ -60,6 +59,28 @@ impl CountdownBotClient {
             token: token.clone(),
         })?;
         match rx.await {
+            Ok(o) => match o {
+                Ok(o2) => return Ok(o2),
+                Err(e) => return Err(e),
+            },
+            Err(e) => return Err(Box::new(e)),
+        }
+    }
+    pub fn sync_call(
+        &self,
+        action: &str,
+        params: &Value,
+    ) -> Result<Value, Box<dyn std::error::Error>> {
+        let (tx, rx) = oneshot::channel::<SenderContainer>();
+        let token = uuid::Uuid::new_v4().to_string();
+        debug!("Performing sync api call: {}, params: {}", action, params);
+        self.request_sender.send(APICallRequest {
+            action: String::from(action),
+            payload: params.clone(),
+            sender: tx,
+            token: token.clone(),
+        })?;
+        match rx.blocking_recv() {
             Ok(o) => match o {
                 Ok(o2) => return Ok(o2),
                 Err(e) => return Err(e),
@@ -84,6 +105,19 @@ impl CountdownBotClient {
             MessageEvent::Unknown => Err(Box::from(anyhow::anyhow!("Invalid message event type"))),
         }
     }
+    pub fn quick_send_sync(
+        &self,
+        evt: &MessageEvent,
+        text: &str,
+    ) -> Result<MessageIdResp, Box<dyn std::error::Error>> {
+        match evt {
+            MessageEvent::Private(evt) => {
+                self.send_private_msg_sync(evt.sender.user_id.unwrap(), text, false)
+            }
+            MessageEvent::Group(evt) => self.send_group_msg_sync(evt.group_id, text, false),
+            MessageEvent::Unknown => Err(Box::from(anyhow::anyhow!("Invalid message event type"))),
+        }
+    }
     pub async fn quick_send_by_sender(
         &self,
         sender: &SenderType,
@@ -104,12 +138,27 @@ impl CountdownBotClient {
             }
         }
     }
+    pub fn quick_send_by_sender_sync(
+        &self,
+        sender: &SenderType,
+        text: &str,
+    ) -> Result<MessageIdResp, Box<dyn std::error::Error>> {
+        match sender {
+            SenderType::Console(_) => {
+                info!("{}", text);
+                Ok(MessageIdResp { message_id: -1 })
+            }
+            SenderType::Private(evt) => {
+                self.quick_send_sync(&MessageEvent::Private(evt.clone()), text)
+            }
+            SenderType::Group(evt) => self.quick_send_sync(&MessageEvent::Group(evt.clone()), text),
+        }
+    }
 }
 
 mod group;
 mod message;
 mod misc;
-
 #[macro_export]
 macro_rules! declare_api_call {
     ($name:ident,$ret:ty, $(($x:ident,$y:ty)),*) => {
@@ -125,6 +174,21 @@ macro_rules! declare_api_call {
                     })
                 ).await
             )
+        }
+        paste::paste! {
+            pub fn [<$name _sync>] (
+                &self,
+                $($x:$y,)*
+            )->$crate::countdown_bot::client::ResultType<$ret> {
+                $crate::countdown_bot::client::create_result(
+                    self.sync_call(
+                        stringify!($name),
+                        &serde_json::json!({
+                            $(stringify!($x):$x,)*
+                        })
+                    )
+                )
+            }
         }
     };
 }

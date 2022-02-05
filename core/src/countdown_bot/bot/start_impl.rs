@@ -105,7 +105,7 @@ impl CountdownBot {
                     match connect_async(url_call.clone()).await {
                         Ok((stream, _resp)) => {
                             info!("API handler connected.");
-                            let (mut write, mut read) = stream.split();
+                            let (mut call_write, mut call_read) = stream.split();
                             loop {
                                 tokio::select! {
                                     _   = stop_rx.changed() => {
@@ -114,7 +114,7 @@ impl CountdownBot {
                                             return;
                                         }
                                     }
-                                    Some(result) = read.next() => {
+                                    Some(result) = call_read.next() => {
                                         let json = serde_json::from_str::<serde_json::Value>(
                                             {
                                                 match &result {
@@ -148,7 +148,7 @@ impl CountdownBot {
                                     call_req = call_rx.recv() => {
                                         if let Some(req) = call_req{
                                             receiver_map.insert(req.token.clone(), req.sender);
-                                            if let Err(err) = write
+                                            if let Err(err) = call_write
                                                 .send(Message::Text(construct_json(
                                                     req.action.clone(),
                                                     req.payload.clone(),

@@ -31,3 +31,4 @@ math = { path = "../plugins/math" }
 sign_in = { path = "../plugins/sign_in" }
 music_gen = { path = "../plugins/music_gen" }
 read = { path = "../plugins/read" }
+zxhdmx = { path = "../plugins/zxhdmx" }
