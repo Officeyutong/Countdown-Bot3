@@ -29,7 +29,12 @@ impl SubUrlWrapper {
         }
     }
     pub fn get_sub_url(&self, sub: &str) -> String {
-        let suburl = self.url_prefix.join(sub).unwrap();
+        let t = if sub.starts_with("/") {
+            sub.trim_start_matches("/").to_string()
+        } else {
+            sub.to_string()
+        };
+        let suburl = self.url_prefix.join(&t).unwrap();
         return suburl.to_string();
     }
 }

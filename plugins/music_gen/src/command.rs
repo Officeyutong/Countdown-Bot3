@@ -318,7 +318,7 @@ pub(crate) async fn generate_music(
                 let s = format!(
                     "下载地址 ({} 秒内有效): {}",
                     config.cache_timeout,
-                    url_wrapper.get_sub_url(&format!("/music_gen/download/{}", this_hash)),
+                    url_wrapper.get_sub_url(&format!("music_gen/download/{}", this_hash)),
                 );
                 debug!("Download message: {}", s);
                 s
