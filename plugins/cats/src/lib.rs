@@ -147,6 +147,7 @@ impl BotPlugin for CatsPlugin {
                             .help("输出指定ID的猫片")
                             .takes_value(true),
                     )
+                    .setting(clap::AppSettings::ColorNever)
                     .setting(clap::AppSettings::NoBinaryName)
                     .setting(clap::AppSettings::DisableVersion)
                     .get_matches_from_safe(args);
