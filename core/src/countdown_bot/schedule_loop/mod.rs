@@ -59,7 +59,7 @@ impl ScheduleLoopManager {
                     let name_cloned = item.name.clone();
                     tokio::spawn(async move {
                         if let Err(e) = plugin_inst
-                            .lock()
+                            .write()
                             .await
                             .on_schedule_loop(name_cloned.as_str())
                             .await

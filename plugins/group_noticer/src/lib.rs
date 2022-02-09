@@ -3,7 +3,6 @@ use countdown_bot3::{
     countdown_bot::{
         bot,
         client::CountdownBotClient,
-        command::SenderType,
         event::{
             notice::{GroupMembersReduceSubType, NoticeEvent},
             Event, EventContainer,
@@ -55,9 +54,6 @@ impl BotPlugin for GroupNoticerPlugin {
         client: CountdownBotClient,
     ) -> HookResult<()> {
         self.client = Some(client);
-        Ok(())
-    }
-    async fn on_disable(&mut self) -> HookResult<()> {
         Ok(())
     }
     fn get_meta(&self) -> PluginMeta {
@@ -118,21 +114,6 @@ impl BotPlugin for GroupNoticerPlugin {
         Ok(())
     }
 
-    async fn on_state_hook(&mut self) -> HookResult<String> {
-        Ok(String::new())
-    }
-    async fn on_schedule_loop(&mut self, _name: &str) -> HookResult<()> {
-        Ok(())
-    }
-
-    async fn on_command(
-        &mut self,
-        _command: String,
-        _args: Vec<String>,
-        _sender: &SenderType,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        Ok(())
-    }
 }
 
 export_static_plugin!(PLUGIN_NAME, GroupNoticerPlugin::default());

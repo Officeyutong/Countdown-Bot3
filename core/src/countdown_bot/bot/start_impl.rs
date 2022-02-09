@@ -96,13 +96,24 @@ impl CountdownBot {
                 self.state_manager.set_curr_plugin(name.clone());
                 self.command_manager.update_plugin_name(name.clone());
                 self.schedule_loop_manager
-                    .set_current_plugin(wrapper.plugin_instance.clone());
+                    .set_current_plugin(wrapper.read().await.plugin_instance.clone());
                 wrapper
+                    .read()
+                    .await
                     .plugin_instance
-                    .lock()
+                    .write()
                     .await
                     .on_before_start(self, self.create_client())?;
             }
+        }
+        {
+            // 检查三种Handler的设置是否合法
+            // for (cmd,cmd_obj) in self.command_manager.command_map.iter(){
+            //     let plugin = self.plugin_manager.plugins.get(cmd).unwrap();
+            //     if plugin.read().await.use_command_handler && cmd_obj.command_handler.is_none() {
+            //         panic!("Plugin {} says it's using ")
+            //     }
+            // }
         }
         {
             let loop_manager = self.schedule_loop_manager.clone();

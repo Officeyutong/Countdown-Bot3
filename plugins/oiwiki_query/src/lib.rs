@@ -5,7 +5,6 @@ use countdown_bot3::{
         bot,
         client::CountdownBotClient,
         command::{Command, SenderType},
-        event::EventContainer,
         plugin::{BotPlugin, HookResult, PluginMeta},
     },
     export_static_plugin,
@@ -46,9 +45,6 @@ impl BotPlugin for OIWikiQueryPlugin {
         self.client = Some(client);
         Ok(())
     }
-    async fn on_disable(&mut self) -> HookResult<()> {
-        Ok(())
-    }
     fn get_meta(&self) -> PluginMeta {
         PluginMeta {
             author: String::from("Antares"),
@@ -56,17 +52,6 @@ impl BotPlugin for OIWikiQueryPlugin {
             version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
-    async fn on_event(&mut self, _event: EventContainer) -> HookResult<()> {
-        Ok(())
-    }
-
-    async fn on_state_hook(&mut self) -> HookResult<String> {
-        Ok(String::new())
-    }
-    async fn on_schedule_loop(&mut self, _name: &str) -> HookResult<()> {
-        Ok(())
-    }
-
     async fn on_command(
         &mut self,
         _command: String,

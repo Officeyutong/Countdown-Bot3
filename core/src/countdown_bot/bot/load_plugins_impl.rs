@@ -1,6 +1,6 @@
 use super::CountdownBot;
-use crate::countdown_bot::plugin::PluginWrapper;
-use std::sync::Arc;
+// use crate::countdown_bot::plugin::PluginWrapper;
+// use std::sync::Arc;
 
 use log::{debug, error, info};
 
@@ -64,30 +64,34 @@ impl CountdownBot {
                 .load_static_plugin(*hook, &self.config.ignored_plugins)
                 .await?;
         }
-        let mut plugins: Vec<(String, Arc<PluginWrapper>)> = vec![];
-        for (name, plugin) in self.plugin_manager.plugins.iter() {
-            if self.preserved_plugin_names.contains(name) {
+        // let mut plugins: Vec<(String, Arc<PluginWrapper>)> = vec![];
+        // for (name, plugin) in self.plugin_manager.plugins.iter() {
+        //     if self.preserved_plugin_names.contains(name) {
+        //         panic!("Preserved plugin name: {}", name);
+        //     }
+        //     plugins.push((String::from(name), plugin.clone()));
+        // }
+        for (name, plugin) in self.plugin_manager.plugins.clone().into_iter() {
+            if self.preserved_plugin_names.contains(&name) {
                 panic!("Preserved plugin name: {}", name);
             }
-            plugins.push((String::from(name), plugin.clone()));
-        }
-        for (name, plugin) in plugins.iter() {
             info!("Loading {}", name);
             self.state_manager.set_curr_plugin(name.clone());
             self.command_manager.update_plugin_name(name.clone());
             self.schedule_loop_manager
-                .set_current_plugin(plugin.plugin_instance.clone());
+                .set_current_plugin(plugin.read().await.plugin_instance.clone());
+            let guard1 = plugin.read().await;
+            let mut plugin_inst = guard1.plugin_instance.write().await;
+            // plugin..use_command_handler = plugin_inst.will_use_command_handler();
+            // plugin.use_event_handler = plugin_inst.will_use_event_handler();
+            // plugin.use_loop_handler = plugin_inst.will_use_loop_handler();
+
             // let plugin_locked = plugin.lock().await;
-            if let Err(e) = plugin
-                .plugin_instance
-                .lock()
-                .await
-                .on_enable(self, tokio::runtime::Handle::current())
-            {
+            if let Err(e) = plugin_inst.on_enable(self, tokio::runtime::Handle::current()) {
                 error!("Error enablng: {}", name);
                 panic!("{}", e);
             } else {
-                info!("Loaded: name={}, meta={:?}", name, plugin.meta);
+                info!("Loaded: name={}, meta={:?}", name, plugin.read().await.meta);
             };
         }
         info!(

@@ -13,3 +13,4 @@ reqwest = { version = "0.11.8"}
 serde_json = "1.0.73"
 tokio = "1.15.0"
 anyhow = "1.0.52"
+downcast-rs = "1.2.0"

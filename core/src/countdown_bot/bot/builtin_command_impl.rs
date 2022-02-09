@@ -16,6 +16,7 @@ impl CountdownBot {
     ) -> Result<(), Box<dyn std::error::Error>> {
         let mut buf = String::new();
         for (name, plugin) in self.plugin_manager.plugins.iter() {
+            let plugin = plugin.read().await;
             buf.push_str(
                 format!(
                     "{}\n来源: {}\n版本: {}\n作者: {}\n介绍: {}\n\n",

@@ -4,6 +4,7 @@ use super::{
         message::{GroupMessageEvent, PrivateMessageEvent},
         EventContainer,
     },
+    plugin::{BotPluginWrapped},
 };
 use anyhow::anyhow;
 use std::{
@@ -18,6 +19,7 @@ pub trait CommandHandler {
         command: String,
         args: Vec<String>,
         sender: &SenderType,
+        plugin: BotPluginWrapped,
     ) -> Result<(), Box<dyn std::error::Error>>;
 }
 pub type WrappedCommandHandler = Mutex<Box<dyn CommandHandler + Send>>;

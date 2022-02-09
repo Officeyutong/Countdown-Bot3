@@ -163,7 +163,8 @@ impl CountdownBot {
         info!("Stopping main selector...");
         for (name, plugin_wrapper) in self.plugin_manager.plugins.iter() {
             // let locked_1 = plugin.lock().await;
-            let mut locked = plugin_wrapper.plugin_instance.lock().await;
+            let guard1 = plugin_wrapper.read().await;
+            let mut locked = guard1.plugin_instance.write().await;
             // locked.on_disable().
             if let Err(e) = tokio::time::timeout(Duration::from_secs(3), locked.on_disable()).await
             {

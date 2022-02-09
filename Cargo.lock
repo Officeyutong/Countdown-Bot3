@@ -657,6 +657,7 @@ dependencies = [
  "async-trait",
  "chrono",
  "config",
+ "downcast-rs",
  "flexi_logger",
  "futures-util",
  "httparse",
@@ -683,6 +684,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "countdown-bot3",
+ "downcast-rs",
  "reqwest",
  "serde 1.0.132",
  "serde_json",
@@ -1001,6 +1003,12 @@ name = "dot-writer"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1defb949b123415131ecae40ab5dca70e9f39eedda3de2cebb03a8a98fdf5894"
+
+[[package]]
+name = "downcast-rs"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 
 [[package]]
 name = "ds_drawer_plugin"

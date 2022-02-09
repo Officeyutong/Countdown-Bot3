@@ -9,14 +9,16 @@ impl DSDrawerPlugin {
     pub async fn generate_sam(&self, text: &str, sender: &SenderType) -> ResultType<()> {
         info!("Generating SAM: {}", text);
         let config = self.config.as_ref().unwrap();
-        let dot_data = {
+        let text_cloned = text.to_string();
+        let dot_data = tokio::task::spawn_blocking(move || {
             let mut pool = SAMPool::default();
-            for (id, s) in text.split("|").enumerate() {
+            for (id, s) in text_cloned.split("|").enumerate() {
                 pool.join_string(s, id as i32);
             }
             pool.collect();
             pool.generate_graph()
-        };
+        })
+        .await?;
         let work_dir = tempfile::tempdir()?;
         let dot_file = work_dir.path().join("out.dot");
         let png_file = work_dir.path().join("out.png");
