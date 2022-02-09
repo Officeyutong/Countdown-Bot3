@@ -22,6 +22,7 @@ impl CatsPlugin {
                 SenderType::Console(_) => true,
                 SenderType::Private(e) => e.user_id as i64 == upload_uid,
                 SenderType::Group(e) => e.user_id as i64 == upload_uid,
+                SenderType::Guild(_) => return Err(anyhow!("暂不支持在频道内操作!").into()),
             };
             if !can_delete {
                 return Err(anyhow!("你只能删除你自己上传的猫片!").into());

@@ -55,6 +55,7 @@ impl BotPlugin for SimpleRandPlugin {
                 .console(true)
                 .group(true)
                 .private(true)
+                .guild(true)
                 .single_alias("随机"),
         )?;
         self.config = Some(load_config_or_save_default::<SimpleRandConfig>(

@@ -58,6 +58,7 @@ impl BotPlugin for CatsPlugin {
             Command::new("cat")
                 .group(true)
                 .private(true)
+                .guild(true)
                 .description("吸猫 | 使用 cat --help 查看帮助"),
         )?;
         bot.register_command(
@@ -75,6 +76,7 @@ impl BotPlugin for CatsPlugin {
         bot.register_command(
             Command::new("delete-cat")
                 .enable_all()
+                .guild(false)
                 .description("删除猫片 | delete-cat <ID>"),
         )?;
         let cloned = self.database.as_ref().unwrap().clone();

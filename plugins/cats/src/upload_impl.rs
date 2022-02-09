@@ -43,6 +43,7 @@ impl CatsPlugin {
             SenderType::Console(_) => todo!(),
             SenderType::Private(evt) => evt.user_id,
             SenderType::Group(evt) => evt.user_id,
+            SenderType::Guild(_) => return Err(anyhow!("暂不支持在频道内上传!").into()),
         };
         let in_whitelist = config.white_list_users.contains(&(uploader_id as i64));
         if !config.white_list_users.contains(&(uploader_id as i64)) && as_qq.is_some() {

@@ -58,6 +58,7 @@ impl BotPlugin for DSDrawerPlugin {
             Command::new("sam")
                 .group(true)
                 .private(true)
+                .guild(true)
                 .description("绘制后缀自动机 | sam <字符串(使用|分割不同的字符串)>"),
         )?;
         Ok(())

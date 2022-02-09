@@ -46,41 +46,48 @@ impl BotPlugin for MathPlugin {
         bot.register_command(
             Command::new("solve")
                 .group(true)
+                .guild(true)
                 .description("解方程组 | solve <未知数1[,未知数2[,...]]> <方程1[,方程2[,...]]>"),
         )?;
         bot.register_command(
             Command::new("integrate")
                 .group(true)
+                .guild(true)
                 .description("不定积分 | integrate <函数>"),
         )?;
         bot.register_command(
             Command::new("diff")
                 .group(true)
+                .guild(true)
                 .description("求导 | diff <函数>"),
         )?;
         bot.register_command(
             Command::new("latex")
                 .group(true)
+                .guild(true)
                 .description("渲染LaTeX | latex <文本>"),
         )?;
         bot.register_command(
             Command::new("series")
                 .group(true)
+                .guild(true)
                 .description("级数展开 | series <展开点> <函数>"),
         )?;
         bot.register_command(
             Command::new("plot")
                 .group(true)
+                .guild(true)
                 .description("绘制函数图像 | plot <起始点> <终点> <函数1[,函数2[,...]]>"),
         )?;
         bot.register_command(
             Command::new("plotpe")
-                .group(true)
+                .group(true).guild(true)
                 .description("绘制参数方程函数图像 | plotpe <参数起始点(参数符号为t)> <参数重点> <x方程1:y方程1[,x方程2:y方程2[,...]]>"),
         )?;
         bot.register_command(
             Command::new("factor")
                 .group(true)
+                .guild(true)
                 .description("分解因式 | factor <式子>"),
         )?;
         Ok(())

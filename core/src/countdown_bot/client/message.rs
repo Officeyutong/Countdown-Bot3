@@ -9,6 +9,19 @@ use serde::Deserialize;
 pub struct MessageIdResp {
     pub message_id: i64,
 }
+#[derive(Deserialize, Debug)]
+pub struct ComposedMessageId {
+    pub message_id_i64: i64,
+    pub message_id_str: String,
+}
+impl Into<ComposedMessageId> for MessageIdResp {
+    fn into(self) -> ComposedMessageId {
+        return ComposedMessageId {
+            message_id_i64: self.message_id,
+            message_id_str: String::new(),
+        };
+    }
+}
 impl Display for MessageIdResp {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(format!("MessageIdResp {{message_id={}}}", self.message_id).as_str())?;

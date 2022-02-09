@@ -72,6 +72,7 @@ impl BotPlugin for JiugePlugin {
             Command::new("jiuge")
                 .group(true)
                 .private(true)
+                .guild(true)
                 .description("九歌爬虫 | 使用指令 jiuge --help 查看帮助"),
         )?;
         Ok(())

@@ -1,4 +1,4 @@
-use self::message::MessageIdResp;
+use self::message::{ComposedMessageId, MessageIdResp};
 use log::{debug, info};
 use serde::{de::DeserializeOwned, Deserialize};
 use serde_json::Value;
@@ -101,13 +101,20 @@ impl CountdownBotClient {
         &self,
         evt: &MessageEvent,
         text: &str,
-    ) -> Result<MessageIdResp, Box<dyn std::error::Error>> {
+    ) -> Result<ComposedMessageId, Box<dyn std::error::Error>> {
         match evt {
-            MessageEvent::Private(evt) => {
-                self.send_private_msg(evt.sender.user_id.unwrap(), text, false)
-                    .await
-            }
-            MessageEvent::Group(evt) => self.send_group_msg(evt.group_id, text, false).await,
+            MessageEvent::Private(evt) => self
+                .send_private_msg(evt.sender.user_id.unwrap(), text, false)
+                .await
+                .map(|v| v.into()),
+            MessageEvent::Group(evt) => self
+                .send_group_msg(evt.group_id, text, false)
+                .await
+                .map(|v| v.into()),
+            MessageEvent::Guild(evt) => self
+                .send_guild_channel_msg(&evt.guild_id, &evt.channel_id, text)
+                .await
+                .map(|v| v.into()),
             MessageEvent::Unknown => Err(Box::from(anyhow::anyhow!("Invalid message event type"))),
         }
     }
@@ -115,12 +122,17 @@ impl CountdownBotClient {
         &self,
         evt: &MessageEvent,
         text: &str,
-    ) -> Result<MessageIdResp, Box<dyn std::error::Error>> {
+    ) -> Result<ComposedMessageId, Box<dyn std::error::Error>> {
         match evt {
-            MessageEvent::Private(evt) => {
-                self.send_private_msg_sync(evt.sender.user_id.unwrap(), text, false)
-            }
-            MessageEvent::Group(evt) => self.send_group_msg_sync(evt.group_id, text, false),
+            MessageEvent::Private(evt) => self
+                .send_private_msg_sync(evt.sender.user_id.unwrap(), text, false)
+                .map(|v| v.into()),
+            MessageEvent::Group(evt) => self
+                .send_group_msg_sync(evt.group_id, text, false)
+                .map(|v| v.into()),
+            MessageEvent::Guild(evt) => self
+                .send_guild_channel_msg_sync(&evt.guild_id, &evt.channel_id, text)
+                .map(|v| v.into()),
             MessageEvent::Unknown => Err(Box::from(anyhow::anyhow!("Invalid message event type"))),
         }
     }
@@ -128,11 +140,11 @@ impl CountdownBotClient {
         &self,
         sender: &SenderType,
         text: &str,
-    ) -> Result<MessageIdResp, Box<dyn std::error::Error>> {
+    ) -> Result<ComposedMessageId, Box<dyn std::error::Error>> {
         match sender {
             SenderType::Console(_) => {
                 info!("{}", text);
-                Ok(MessageIdResp { message_id: -1 })
+                Ok(MessageIdResp { message_id: -1 }.into())
             }
             SenderType::Private(evt) => {
                 self.quick_send(&MessageEvent::Private(evt.clone()), text)
@@ -142,29 +154,35 @@ impl CountdownBotClient {
                 self.quick_send(&MessageEvent::Group(evt.clone()), text)
                     .await
             }
+            SenderType::Guild(evt) => {
+                self.quick_send(&MessageEvent::Guild(evt.clone()), text)
+                    .await
+            }
         }
     }
     pub fn quick_send_by_sender_sync(
         &self,
         sender: &SenderType,
         text: &str,
-    ) -> Result<MessageIdResp, Box<dyn std::error::Error>> {
+    ) -> Result<ComposedMessageId, Box<dyn std::error::Error>> {
         match sender {
             SenderType::Console(_) => {
                 info!("{}", text);
-                Ok(MessageIdResp { message_id: -1 })
+                Ok(MessageIdResp { message_id: -1 }.into())
             }
             SenderType::Private(evt) => {
                 self.quick_send_sync(&MessageEvent::Private(evt.clone()), text)
             }
             SenderType::Group(evt) => self.quick_send_sync(&MessageEvent::Group(evt.clone()), text),
+            SenderType::Guild(evt) => self.quick_send_sync(&MessageEvent::Guild(evt.clone()), text),
         }
     }
 }
 
-mod group;
-mod message;
-mod misc;
+pub mod group;
+pub mod guild;
+pub mod message;
+pub mod misc;
 #[macro_export]
 macro_rules! declare_api_call {
     ($name:ident,$ret:ty, $(($x:ident,$y:ty)),*) => {

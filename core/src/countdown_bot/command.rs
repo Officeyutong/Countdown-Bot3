@@ -1,7 +1,7 @@
 use super::{
     client::ResultType,
     event::{
-        message::{GroupMessageEvent, PrivateMessageEvent},
+        message::{GroupMessageEvent, GuildMessageEvent, PrivateMessageEvent},
         EventContainer,
     },
     plugin::BotPluginWrapped,
@@ -32,6 +32,7 @@ pub struct Command {
     pub group_enabled: bool,
     pub private_enabled: bool,
     pub console_enabled: bool,
+    pub guild_enabled: bool,
     pub command_handler: Option<WrappedCommandHandler>,
 }
 
@@ -45,6 +46,7 @@ impl Command {
             group_enabled: false,
             private_enabled: false,
             console_enabled: false,
+            guild_enabled: false,
             command_handler: None,
         }
     }
@@ -58,6 +60,7 @@ impl Command {
             console_enabled: true,
             private_enabled: true,
             group_enabled: true,
+            guild_enabled: true,
             ..self
         }
     }
@@ -94,6 +97,11 @@ impl Command {
     pub fn console(self, v: bool) -> Self {
         let mut t = Command::from(self);
         t.console_enabled = v;
+        return t;
+    }
+    pub fn guild(self, v: bool) -> Self {
+        let mut t = Command::from(self);
+        t.guild_enabled = v;
         return t;
     }
     pub fn with_plugin_name(self, v: &String) -> Self {
@@ -215,6 +223,9 @@ impl CommandSender {
                         Ok(SenderType::Group(group_evt.clone()))
                     }
                     super::event::message::MessageEvent::Unknown => Err(Box::from(anyhow!("?"))),
+                    super::event::message::MessageEvent::Guild(v) => {
+                        Ok(SenderType::Guild(v.clone()))
+                    }
                 },
                 _ => Err(Box::from(anyhow!("MessageEvent expected"))),
             },
@@ -226,6 +237,7 @@ pub enum SenderType {
     Console(ConsoleSender),
     Private(PrivateMessageEvent),
     Group(GroupMessageEvent),
+    Guild(GuildMessageEvent),
 }
 
 impl SenderType {
@@ -234,6 +246,7 @@ impl SenderType {
             SenderType::Console(_) => "console".to_string(),
             SenderType::Private(v) => format!("private:{}", v.user_id),
             SenderType::Group(v) => format!("group:{}", v.user_id),
+            SenderType::Guild(v) => format!("guild:{},channel:{}", v.guild_id, v.channel_id),
         }
     }
     pub fn generate_sender_message(&self) -> String {
@@ -247,6 +260,15 @@ impl SenderType {
             SenderType::Group(e) => format!(
                 "Group: group(id: {}), user(id: {}, card: \"{}\", nickname: \"{}\")",
                 e.group_id,
+                e.sender.user_id.clone().unwrap_or(-1 as i64),
+                e.sender.card.clone().unwrap_or("".to_string()),
+                e.sender.nickname.clone().unwrap_or("".to_string()),
+            ),
+            SenderType::Guild(e) => format!(
+                "Guild: guild(id: {}), channel(id: {}), \
+            user(id: {}, card: \"{}\", nickname: \"{}\")",
+                e.guild_id,
+                e.channel_id,
                 e.sender.user_id.clone().unwrap_or(-1 as i64),
                 e.sender.card.clone().unwrap_or("".to_string()),
                 e.sender.nickname.clone().unwrap_or("".to_string()),

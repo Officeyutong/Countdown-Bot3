@@ -56,6 +56,7 @@ impl BotPlugin for WeatherPlugin {
                 .console(true)
                 .group(true)
                 .private(true)
+                .guild(true)
                 .single_alias("天气"),
         )?;
         self.config = Some(load_config_or_save_default::<WeatherConfig>(

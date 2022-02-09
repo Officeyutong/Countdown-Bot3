@@ -65,6 +65,7 @@ impl BotPlugin for MusicGenPlugin {
         bot.register_command(
             Command::new("musicgen")
                 .group(true)
+                .guild(true)
                 .description("生成音乐 | 使用 musicgen --help 查看帮助"),
         )
         .unwrap();

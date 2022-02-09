@@ -51,9 +51,8 @@ impl SignInPlugin {
         };
         debug!("Querying {} ~ {}", query_month_begin, query_month_end);
         let (user_id, group_id) = match sender {
-            SenderType::Console(_) => todo!(),
-            SenderType::Private(_) => todo!(),
             SenderType::Group(e) => (e.user_id as i64, e.group_id),
+            _ => todo!(),
         };
         let group_sign_in_data = self
             .get_sign_in_data(query_month_begin, query_month_end, group_id, Some(user_id))

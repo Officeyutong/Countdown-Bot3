@@ -46,6 +46,7 @@ impl BotPlugin for QRCodePlugin {
             Command::new("qrcode")
                 .group(true)
                 .private(true)
+                .guild(true)
                 .description("生成二维码 | qrcode <数据>"),
         )?;
         Ok(())

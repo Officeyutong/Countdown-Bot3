@@ -88,6 +88,7 @@ impl BotPlugin for Music163Plugin {
             Command::new("music")
                 .group(true)
                 .private(true)
+                .guild(true)
                 .description("网易云音乐搜歌 | 使用指令 music --help 查看帮助"),
         )?;
         Ok(())

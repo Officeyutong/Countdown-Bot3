@@ -52,6 +52,7 @@ impl CatsConfig {
                 }
                 return Ok(true);
             }
+            SenderType::Guild(_) => return Err(anyhow!("暂不支持在频道内操作!")),
         }
     }
 }

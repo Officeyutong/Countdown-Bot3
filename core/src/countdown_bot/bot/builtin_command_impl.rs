@@ -107,6 +107,7 @@ https://github.com/Officeyutong/Countdown-Bot3"#,
                 SenderType::Console(_) => |p: &(&String, &Arc<Command>)| p.1.console_enabled,
                 SenderType::Private(_) => |p: &(&String, &Arc<Command>)| p.1.private_enabled,
                 SenderType::Group(_) => |p: &(&String, &Arc<Command>)| p.1.group_enabled,
+                SenderType::Guild(_) => |p: &(&String, &Arc<Command>)| p.1.guild_enabled,
             })
             .collect::<Vec<(&String, &Arc<Command>)>>();
 

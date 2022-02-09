@@ -3,6 +3,8 @@ use std::error::Error;
 use anyhow::anyhow;
 use serde::Deserialize;
 use serde_json::{from_value, Value};
+
+use crate::countdown_bot::client::guild::SubChannelInfo;
 #[derive(Deserialize, Debug, Clone)]
 pub enum NoticeEvent {
     GroupFileUpload(GroupFileUploadEvent),
@@ -16,6 +18,10 @@ pub enum NoticeEvent {
     GroupPoke(GroupPokeEvent),
     GroupRedbagLuckKing(GroupRedbagLuckKingEvent),
     GroupMemberHonorChange(GroupMemberHonorChangeEvent),
+    GuildMessageReactionsUpdatedEvent(MessageReactionsUpdatedEvent),
+    GuildSubchannelMessageUpdated(SubChannelMessageUpdated),
+    GuildSubchannelCreated(SubChannelCreated),
+    GuildSubchannelDestroyed(SubChannelDestroyed),
     Unknown,
 }
 impl NoticeEvent {
@@ -56,6 +62,12 @@ impl NoticeEvent {
                     "honor" => NoticeEvent::GroupMemberHonorChange(from_value::<
                         GroupMemberHonorChangeEvent,
                     >(t)?),
+                    "message_reactions_updates" => {
+                        NoticeEvent::GuildMessageReactionsUpdatedEvent(from_value(t)?)
+                    }
+                    "channel_updated" => NoticeEvent::GuildSubchannelMessageUpdated(from_value(t)?),
+                    "channel_created" => NoticeEvent::GuildSubchannelCreated(from_value(t)?),
+                    "channel_destroyed" => NoticeEvent::GuildSubchannelDestroyed(from_value(t)?),
                     _ => NoticeEvent::Unknown,
                 },
             );
@@ -180,4 +192,52 @@ pub struct GroupMemberHonorChangeEvent {
     pub group_id: i64,
     pub honor_type: GroupMemberHonorChangeSubType,
     pub user_id: i64,
+}
+#[derive(Deserialize, Debug, Clone)]
+pub struct ReactionInfo {
+    pub emoji_id: String,
+    pub emoji_index: String,
+    pub emoji_type: i32,
+    pub emoji_name: String,
+    pub count: i32,
+    pub clicked: bool,
+}
+#[derive(Deserialize, Debug, Clone)]
+pub struct MessageReactionsUpdatedEvent {
+    pub guild_id: String,
+    pub channel_id: String,
+    pub user_id: String,
+    pub message_id: String,
+    pub current_reactions: Vec<ReactionInfo>,
+}
+#[derive(Deserialize, Debug, Clone)]
+pub struct SubChannelMessageUpdated {
+    pub guild_id: String,
+    pub channel_id: String,
+    //操作者
+    pub user_id: String,
+    // 操作者
+    pub operator_id: String,
+    pub old_info: SubChannelInfo,
+    pub new_info: SubChannelInfo,
+}
+#[derive(Deserialize, Debug, Clone)]
+pub struct SubChannelCreated {
+    pub guild_id: String,
+    pub channel_id: String,
+    //操作者
+    pub user_id: String,
+    // 操作者
+    pub operator_id: String,
+    pub channel_info: SubChannelInfo,
+}
+#[derive(Deserialize, Debug, Clone)]
+pub struct SubChannelDestroyed {
+    pub guild_id: String,
+    pub channel_id: String,
+    //操作者
+    pub user_id: String,
+    // 操作者
+    pub operator_id: String,
+    pub channel_info: SubChannelInfo,
 }

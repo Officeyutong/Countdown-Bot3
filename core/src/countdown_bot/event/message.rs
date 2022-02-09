@@ -5,6 +5,7 @@ use serde_json::Value as JsonValue;
 pub enum MessageEvent {
     Private(PrivateMessageEvent),
     Group(GroupMessageEvent),
+    Guild(GuildMessageEvent),
     Unknown,
 }
 impl MessageEvent {
@@ -25,6 +26,10 @@ impl MessageEvent {
                     "group" => MessageEvent::Group(serde_json::from_value::<GroupMessageEvent>(
                         json.clone(),
                     )?),
+                    "guild" => MessageEvent::Guild(serde_json::from_value::<GuildMessageEvent>(
+                        json.clone(),
+                    )?),
+
                     _ => MessageEvent::Unknown,
                 },
             );
@@ -115,4 +120,27 @@ pub struct GroupMessageSender {
     pub level: Option<String>,
     pub role: Option<GroupSenderRole>,
     pub title: Option<String>,
+}
+#[derive(Deserialize, Debug, Clone, Hash, PartialEq, Eq)]
+pub struct GuildMessageEvent {
+    pub sub_type: String,
+    pub guild_id: String,
+    pub channel_id: String,
+    pub user_id: String,
+    pub message_id: String,
+    pub sender: GuildMessageSender,
+    pub message: String,
+}
+#[derive(Deserialize, Debug, Clone, Hash, PartialEq, Eq)]
+pub struct GuildMessageSender {
+    pub user_id: Option<i64>,
+    pub nickname: Option<String>,
+    pub card: Option<String>,
+    pub sex: Option<SenderSex>,
+    pub age: Option<i32>,
+    pub area: Option<String>,
+    pub level: Option<String>,
+    pub role: Option<GroupSenderRole>,
+    pub title: Option<String>,
+    pub tiny_id: String,
 }

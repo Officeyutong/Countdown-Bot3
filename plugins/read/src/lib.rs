@@ -62,7 +62,8 @@ impl BotPlugin for ReadPlugin {
             Command::new("read")
                 .description("文字转语音 | read <文本>")
                 .group(true)
-                .private(true),
+                .private(true)
+                .guild(true),
         )?;
         self.config = Some(load_config_or_save_default::<ReadConfig>(
             &bot.ensure_plugin_data_dir(PLUGIN_NAME)?,

@@ -5,9 +5,9 @@ use crate::SignInPlugin;
 impl SignInPlugin {
     pub async fn command_user_query(&self, sender: &SenderType) -> ResultType<()> {
         let user_id = match sender {
-            SenderType::Console(_) => todo!(),
             SenderType::Private(evt) => evt.user_id,
             SenderType::Group(evt) => evt.user_id,
+            _ => todo!(),
         };
         let user_data = self.get_user_data(user_id.into()).await?;
         let mut buf = format!("查询到您在{}个群有签到记录：\n", user_data.len());

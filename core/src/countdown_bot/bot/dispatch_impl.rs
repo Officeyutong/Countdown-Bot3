@@ -15,6 +15,7 @@ impl CountdownBot {
             let (msg_line, sender) = match msg_evt {
                 MessageEvent::Private(e) => (&e.message, SenderType::Private(e.clone())),
                 MessageEvent::Group(e) => (&e.message, SenderType::Group(e.clone())),
+                MessageEvent::Guild(e) => (&e.message, SenderType::Guild(e.clone())),
                 MessageEvent::Unknown => return,
             };
             let mut ok_for_command = false;
@@ -59,6 +60,7 @@ impl CountdownBot {
             SenderType::Console(_) => return false,
             SenderType::Private(v) => v.user_id,
             SenderType::Group(v) => v.user_id,
+            SenderType::Guild(_) => return false,
         };
         return self.config.blacklist_users.contains(&(user_id as i64));
     }
@@ -79,11 +81,13 @@ impl CountdownBot {
             }
             SenderType::Private(_) => |v| v.private_enabled,
             SenderType::Group(_) => |v| v.group_enabled,
+            SenderType::Guild(_) => |v| v.guild_enabled,
         };
         let mut cmd_line = match &parsed_sender {
             SenderType::Console(evt) => evt.line.clone(),
             SenderType::Private(evt) => evt.message.clone(),
             SenderType::Group(evt) => evt.message.clone(),
+            SenderType::Guild(evt) => evt.message.clone(),
         };
         for prefix in self.config.command_prefix.iter() {
             if cmd_line.starts_with(prefix.as_str()) {
@@ -236,6 +240,12 @@ impl CountdownBot {
                 SenderType::Group(evt) => {
                     client
                         .quick_send(&MessageEvent::Group(evt.clone()), &s)
+                        .await
+                        .ok();
+                }
+                SenderType::Guild(evt) => {
+                    client
+                        .quick_send(&MessageEvent::Guild(evt.clone()), &s)
                         .await
                         .ok();
                 }

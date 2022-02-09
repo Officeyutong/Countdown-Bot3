@@ -6,9 +6,8 @@ use anyhow::anyhow;
 impl SignInPlugin {
     pub async fn command_signin(&self, sender: &SenderType) -> ResultType<()> {
         let group_evt = match sender {
-            SenderType::Console(_) => todo!(),
-            SenderType::Private(_) => todo!(),
             SenderType::Group(evt) => evt,
+            _ => todo!(),
         };
         let group_id = group_evt.group_id;
         let user_id = group_evt.user_id as i64;

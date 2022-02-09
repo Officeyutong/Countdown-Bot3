@@ -197,6 +197,7 @@ impl CountdownBot {
                 .group(true)
                 .private(true)
                 .console(true)
+                .guild(true)
                 .description("查看帮助")
                 .with_plugin_name(&String::from("<bot>")),
         )
