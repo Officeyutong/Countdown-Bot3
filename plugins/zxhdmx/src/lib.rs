@@ -187,7 +187,7 @@ impl BotPlugin for ZxhdmxPlugin {
         _args: Vec<String>,
         sender: &SenderType,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        if command.as_str() == "zxmdmx" {
+        if command.as_str() == "zxhdmx" {
             let (user_id, group_id) = match sender {
                 SenderType::Group(evt) => (evt.user_id, evt.group_id),
                 _ => todo!(),
@@ -207,6 +207,7 @@ impl BotPlugin for ZxhdmxPlugin {
             let local_game_objects = self.game_objects.clone();
             let local_inpr = self.py_inpr.clone();
             let local_config = self.config.clone().unwrap();
+            debug!("Before entering..");
             tokio::task::spawn_blocking(move || {
                 return handle_command(
                     user_id,
@@ -224,6 +225,8 @@ impl BotPlugin for ZxhdmxPlugin {
         } else if command.as_str() == "zxhdmx-reload" {
             self.reload_gamedata()?;
             self.reload_template()?;
+        } else {
+            panic!("Invalid command: {}", command);
         }
 
         // self.handle_command(user_id, group_id).await?;

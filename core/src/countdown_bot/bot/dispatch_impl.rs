@@ -5,7 +5,7 @@ use crate::countdown_bot::{
     event::{message::MessageEvent, Event, EventContainer},
 };
 use anyhow::anyhow;
-use log::{error, info};
+use log::{error, info, trace};
 
 use super::CountdownBot;
 
@@ -174,12 +174,14 @@ impl CountdownBot {
                                 let local_sender = sender_cloned;
                                 let local_cmd = cmd_cloned;
                                 let call_ret = (if let Some(handler) = &local_cmd.command_handler {
+                                    trace!("Handling command through handler..");
                                     handler
                                         .lock()
                                         .await
                                         .on_command(cmd_name, args, &local_sender, plugin.clone())
                                         .await
                                 } else {
+                                    trace!("Handling command through plugin..");
                                     plugin
                                         .write()
                                         .await
@@ -187,6 +189,7 @@ impl CountdownBot {
                                         .await
                                 })
                                 .map_err(|e| anyhow!(format!("{}", e)));
+                                trace!("Command process done.");
                                 if let Err(e) = call_ret {
                                     // let err2 = anyhow!(format!("{}", e));
                                     error!("{:#?}", e);
