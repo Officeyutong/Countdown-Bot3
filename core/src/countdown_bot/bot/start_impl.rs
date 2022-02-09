@@ -57,7 +57,7 @@ impl CountdownBot {
         let (stop_tx, stop_rx) = tokio::sync::watch::channel::<bool>(false);
         self.stop_signal_sender = Some(stop_tx);
         self.stop_signal_receiver = Some(stop_rx.clone());
-        self.schedule_loop_manager
+        self.schedule_loop_manager.as_mut().unwrap()
             .set_stop_signal_receiver(stop_rx.clone());
         let (console_tx, mut console_rx) = mpsc::unbounded_channel::<String>();
         {
@@ -95,7 +95,7 @@ impl CountdownBot {
             {
                 self.state_manager.set_curr_plugin(name.clone());
                 self.command_manager.update_plugin_name(name.clone());
-                self.schedule_loop_manager
+                self.schedule_loop_manager.as_mut().unwrap()
                     .set_current_plugin(wrapper.read().await.plugin_instance.clone());
                 wrapper
                     .read()
@@ -116,7 +116,7 @@ impl CountdownBot {
             // }
         }
         {
-            let loop_manager = self.schedule_loop_manager.clone();
+            let loop_manager = self.schedule_loop_manager.take().unwrap();
             tokio::spawn(loop_manager.run());
         }
         {

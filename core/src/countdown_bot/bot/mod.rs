@@ -1,12 +1,15 @@
 use anyhow::anyhow;
+use tokio::sync::Mutex;
 use std::collections::HashSet;
 use std::path;
+use std::sync::Arc;
 use std::time::Duration;
 pub type ReceiverMap = std::collections::HashMap<String, SingleCallSender>;
 use super::client::{CountdownBotClient, SingleCallSender};
 use super::command::{Command, CommandManager};
 use super::config::CountdownBotConfig;
 use super::plugin::{PluginManager, PluginRegisterCallback};
+use super::schedule_loop::handler::ScheduleLoopHandler;
 use super::schedule_loop::ScheduleLoopManager;
 use super::state_hook::StateHookManager;
 use super::utils::SubUrlWrapper;
@@ -39,7 +42,7 @@ pub struct CountdownBot {
     command_manager: CommandManager,
     preserved_plugin_names: HashSet<String>,
     state_manager: StateHookManager,
-    schedule_loop_manager: ScheduleLoopManager,
+    schedule_loop_manager: Option<ScheduleLoopManager>,
     plugin_static_register_hooks: Vec<PluginRegisterCallback>,
     salvo_router: Option<salvo::Router>,
 }
@@ -58,8 +61,16 @@ impl CountdownBot {
     pub fn create_client(&self) -> CountdownBotClient {
         return self.client.as_ref().unwrap().clone();
     }
-    pub fn register_schedule(&mut self, time: (u32, u32), name: String) {
-        self.schedule_loop_manager.register(time, name);
+    pub fn register_schedule(
+        &mut self,
+        time: (u32, u32),
+        name: String,
+        handler: Arc<Mutex<dyn ScheduleLoopHandler>>,
+    ) {
+        self.schedule_loop_manager
+            .as_mut()
+            .unwrap()
+            .register(time, name, handler);
     }
     pub fn register_command(&mut self, cmd: Command) -> Result<(), Box<(dyn std::error::Error)>> {
         return self.command_manager.register_command(cmd);
@@ -106,7 +117,7 @@ impl CountdownBot {
             command_manager: CommandManager::new(),
             preserved_plugin_names: HashSet::from(PRESERVED_PLUGIN_NAMES.map(|x| String::from(x))),
             state_manager: StateHookManager::default(),
-            schedule_loop_manager: ScheduleLoopManager::new(),
+            schedule_loop_manager: Some(ScheduleLoopManager::new()),
             plugin_static_register_hooks: vec![],
             salvo_router: Some(salvo::Router::new()),
         }

@@ -57,9 +57,9 @@ pub trait BotPlugin: DowncastSync + Send + Sync {
     async fn on_state_hook(&mut self) -> HookResult<String> {
         return Ok(String::new());
     }
-    async fn on_schedule_loop(&mut self, _name: &str) -> HookResult<()> {
-        return Ok(());
-    }
+    // async fn on_schedule_loop(&mut self, _name: &str) -> HookResult<()> {
+    //     return Ok(());
+    // }
     // fn will_use_command_handler(&self) -> bool {
     //     return false;
     // }

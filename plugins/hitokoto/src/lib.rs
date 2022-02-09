@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::anyhow;
 use async_trait::async_trait;
 use countdown_bot3::{
@@ -5,13 +7,15 @@ use countdown_bot3::{
         bot,
         client::{CountdownBotClient, ResultType},
         command::{Command, SenderType},
-        plugin::{BotPlugin, HookResult, PluginMeta},
+        plugin::{BotPlugin, BotPluginWrapped, HookResult, PluginMeta},
+        schedule_loop::handler::ScheduleLoopHandler,
         utils::load_config_or_save_default,
     },
     export_static_plugin,
 };
 use log::{error, info};
 use serde::{Deserialize, Serialize};
+use tokio::sync::Mutex;
 static PLUGIN_NAME: &str = "hitokoto";
 
 #[derive(Deserialize, Serialize)]
@@ -118,6 +122,7 @@ impl BotPlugin for HitokotoPlugin {
         bot.register_schedule(
             (cfg.broadcast_hour, cfg.broadcast_minute),
             "Hitokoto定时广播".to_string(),
+            Arc::new(Mutex::new(ScheduleHandler {})),
         );
         bot.register_command(
             Command::new("hitokoto")
@@ -148,36 +153,6 @@ impl BotPlugin for HitokotoPlugin {
             cfg.broadcast_hour, cfg.broadcast_minute
         ))
     }
-    async fn on_schedule_loop(&mut self, _name: &str) -> HookResult<()> {
-        let cfg = self.config.as_ref().unwrap();
-        let groups = if cfg.using_url_list {
-            serde_json::from_str::<Vec<String>>(
-                reqwest::get(cfg.list_url.clone())
-                    .await?
-                    .text()
-                    .await?
-                    .as_str(),
-            )?
-        } else {
-            cfg.list_local.clone()
-        };
-
-        for group in groups.iter() {
-            let client = self.client.clone().unwrap();
-            let gid = i64::from_str_radix(group, 10)?;
-            info!("Sending hitokoto to group {}", gid);
-            let r = random_hitokoto().await?;
-            info!("Value: {:#?}", r);
-            if let Err(e) = client
-                .clone()
-                .send_group_msg(gid, r.generate_message().as_str(), false)
-                .await
-            {
-                error!("发送Hitokoto到群 {} 失败:\n{}", gid, e);
-            }
-        }
-        Ok(())
-    }
 
     async fn on_command(
         &mut self,
@@ -200,3 +175,40 @@ impl BotPlugin for HitokotoPlugin {
 }
 
 export_static_plugin!(PLUGIN_NAME, HitokotoPlugin::default());
+
+struct ScheduleHandler;
+#[async_trait::async_trait]
+impl ScheduleLoopHandler for ScheduleHandler {
+    async fn on_schedule_loop(&mut self, _name: &str, plugin: BotPluginWrapped) -> HookResult<()> {
+        let guard = plugin.read().await;
+        let casted_guard = guard.downcast_ref::<HitokotoPlugin>().unwrap();
+        let cfg = casted_guard.config.as_ref().unwrap();
+        let groups = if cfg.using_url_list {
+            serde_json::from_str::<Vec<String>>(
+                reqwest::get(cfg.list_url.clone())
+                    .await?
+                    .text()
+                    .await?
+                    .as_str(),
+            )?
+        } else {
+            cfg.list_local.clone()
+        };
+
+        for group in groups.iter() {
+            let client = casted_guard.client.as_ref().unwrap();
+            let gid = i64::from_str_radix(group, 10)?;
+            info!("Sending hitokoto to group {}", gid);
+            let r = random_hitokoto().await?;
+            info!("Value: {:#?}", r);
+            if let Err(e) = client
+                .clone()
+                .send_group_msg(gid, r.generate_message().as_str(), false)
+                .await
+            {
+                error!("发送Hitokoto到群 {} 失败:\n{}", gid, e);
+            }
+        }
+        return Ok(());
+    }
+}

@@ -1,17 +1,22 @@
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use chrono::{DateTime, Local, Timelike};
 use log::{error, info, trace};
+use tokio::sync::Mutex;
+
+use self::handler::ScheduleLoopHandler;
 
 use super::{bot::StopSignalReceiverType, plugin::BotPluginWrapped};
-#[derive(Clone)]
+pub mod handler;
+// #[derive(Clone)]
 pub struct ScheduleItemWrapper {
     pub time: (u32, u32),
     pub plugin: BotPluginWrapped,
     pub name: String,
     pub last_executed: Option<DateTime<Local>>,
+    pub handler: Arc<Mutex<dyn ScheduleLoopHandler>>,
 }
-#[derive(Clone)]
+// #[derive(Clone)]
 pub struct ScheduleLoopManager {
     pub schedules: Vec<ScheduleItemWrapper>,
     current_plugin: Option<BotPluginWrapped>,
@@ -31,12 +36,18 @@ impl ScheduleLoopManager {
             stop_signal_receiver: None,
         }
     }
-    pub fn register(&mut self, time: (u32, u32), name: String) {
+    pub fn register(
+        &mut self,
+        time: (u32, u32),
+        name: String,
+        handler: Arc<Mutex<dyn ScheduleLoopHandler>>,
+    ) {
         self.schedules.push(ScheduleItemWrapper {
             name,
             plugin: self.current_plugin.as_ref().unwrap().clone(),
             time,
             last_executed: None,
+            handler,
         });
     }
     async fn map_everything(&mut self) {
@@ -57,11 +68,12 @@ impl ScheduleLoopManager {
                     item.last_executed = Some(now.clone());
                     let plugin_inst = item.plugin.clone();
                     let name_cloned = item.name.clone();
+                    let handler_ref = item.handler.clone();
                     tokio::spawn(async move {
-                        if let Err(e) = plugin_inst
-                            .write()
+                        if let Err(e) = handler_ref
+                            .lock()
                             .await
-                            .on_schedule_loop(name_cloned.as_str())
+                            .on_schedule_loop(name_cloned.as_str(), plugin_inst)
                             .await
                         {
                             error!(

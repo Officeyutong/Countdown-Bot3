@@ -6,15 +6,16 @@ use countdown_bot3::{
         bot,
         client::{CountdownBotClient, ResultType},
         command::{Command, SenderType},
-        event::EventContainer,
-        plugin::{BotPlugin, HookResult, PluginMeta},
+        plugin::{BotPlugin, BotPluginWrapped, HookResult, PluginMeta},
+        schedule_loop::handler::ScheduleLoopHandler,
         utils::load_config_or_save_default,
     },
     export_static_plugin, initialize_plugin_logger,
 };
 use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use tokio::sync::Mutex;
+use std::{collections::HashMap, sync::Arc};
 static PLUGIN_NAME: &str = "broadcast";
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct BroadcastEntry {
@@ -92,6 +93,7 @@ impl BotPlugin for BroadcastPlugin {
         bot.register_schedule(
             (cfg.broadcast_hour, cfg.broadcast_minute),
             String::from("倒计时广播"),
+            Arc::new(Mutex::new(ScheduleHandler {})),
         );
         Ok(())
     }
@@ -113,10 +115,6 @@ impl BotPlugin for BroadcastPlugin {
             version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
-    async fn on_event(&mut self, _event: EventContainer) -> HookResult<()> {
-        Ok(())
-    }
-
     async fn on_state_hook(&mut self) -> HookResult<String> {
         let config = self.config.as_ref().unwrap();
         return Ok(format!(
@@ -124,16 +122,6 @@ impl BotPlugin for BroadcastPlugin {
             config.broadcast_hour, config.broadcast_minute
         ));
     }
-    async fn on_schedule_loop(&mut self, _name: &str) -> HookResult<()> {
-        let broadcast_data = self.ensure_broadcast_data().await?;
-        for (group, data) in broadcast_data.iter() {
-            if let Err(e) = self.broadcast_at_group(group.as_str(), data).await {
-                error!("群 {} 广播失败:\n{}", group, e);
-            }
-        }
-        Ok(())
-    }
-
     async fn on_command(
         &mut self,
         _command: String,
@@ -226,3 +214,18 @@ fn generate_broadcast_content(broadcast_list: &Vec<BroadcastEntry>) -> ResultTyp
 }
 
 export_static_plugin!(PLUGIN_NAME, BroadcastPlugin::default());
+struct ScheduleHandler;
+#[async_trait::async_trait]
+impl ScheduleLoopHandler for ScheduleHandler {
+    async fn on_schedule_loop(&mut self, _name: &str, plugin: BotPluginWrapped) -> HookResult<()> {
+        let guard = plugin.read().await;
+        let casted = guard.downcast_ref::<BroadcastPlugin>().unwrap();
+        let broadcast_data = casted.ensure_broadcast_data().await?;
+        for (group, data) in broadcast_data.iter() {
+            if let Err(e) = casted.broadcast_at_group(group.as_str(), data).await {
+                error!("群 {} 广播失败:\n{}", group, e);
+            }
+        }
+        Ok(())
+    }
+}

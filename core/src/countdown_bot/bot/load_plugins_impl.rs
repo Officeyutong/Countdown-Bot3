@@ -79,6 +79,8 @@ impl CountdownBot {
             self.state_manager.set_curr_plugin(name.clone());
             self.command_manager.update_plugin_name(name.clone());
             self.schedule_loop_manager
+                .as_mut()
+                .unwrap()
                 .set_current_plugin(plugin.read().await.plugin_instance.clone());
             let guard1 = plugin.read().await;
             let mut plugin_inst = guard1.plugin_instance.write().await;
