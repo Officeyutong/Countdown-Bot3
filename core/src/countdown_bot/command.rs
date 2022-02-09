@@ -4,7 +4,7 @@ use super::{
         message::{GroupMessageEvent, PrivateMessageEvent},
         EventContainer,
     },
-    plugin::{BotPluginWrapped},
+    plugin::BotPluginWrapped,
 };
 use anyhow::anyhow;
 use std::{

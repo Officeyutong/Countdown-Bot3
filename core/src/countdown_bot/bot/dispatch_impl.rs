@@ -177,12 +177,7 @@ impl CountdownBot {
                                     handler
                                         .lock()
                                         .await
-                                        .on_command(
-                                            cmd_name,
-                                            args,
-                                            &local_sender,
-                                            plugin.clone(),
-                                        )
+                                        .on_command(cmd_name, args, &local_sender, plugin.clone())
                                         .await
                                 } else {
                                     plugin

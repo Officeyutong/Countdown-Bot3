@@ -30,7 +30,7 @@ async fn main() {
     bot.add_plugin_static_register_hook(music_gen::plugin_register);
     bot.add_plugin_static_register_hook(read::plugin_register);
     bot.add_plugin_static_register_hook(zxhdmx::plugin_register);
-    
+
     bot.init().await.expect("Failed to initialize bot.");
     bot.run().await.unwrap();
 }

@@ -113,7 +113,6 @@ impl BotPlugin for GroupNoticerPlugin {
         }
         Ok(())
     }
-
 }
 
 export_static_plugin!(PLUGIN_NAME, GroupNoticerPlugin::default());

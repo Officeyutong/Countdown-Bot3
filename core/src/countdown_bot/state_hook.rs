@@ -18,7 +18,16 @@ impl StateHookManager {
         let mut buf: Vec<String> = vec![];
         for plugin_name in self.hooks.iter() {
             let plugin = plugin_manager.plugins.get(plugin_name).unwrap();
-            buf.push(plugin.read().await.plugin_instance.write().await.on_state_hook().await?);
+            buf.push(
+                plugin
+                    .read()
+                    .await
+                    .plugin_instance
+                    .write()
+                    .await
+                    .on_state_hook()
+                    .await?,
+            );
         }
         return Ok(buf.join("\n"));
     }

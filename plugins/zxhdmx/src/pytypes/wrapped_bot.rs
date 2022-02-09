@@ -6,9 +6,7 @@ use pyvm::{
     pyclass, pyimpl, IntoPyRef, PyRef, PyResult, PyValue, VirtualMachine,
 };
 use rustpython_vm as pyvm;
-use std::{
-    fmt::Debug,
-};
+use std::fmt::Debug;
 
 use crate::utils::bigint_to_i64;
 
@@ -68,29 +66,11 @@ impl WrappedCountdownBot {
         );
 
         debug!("Send message to {}:\n{}", gid, message);
-        
-        // let client = self.client.clone();
-        // let msg0 = message.clone();
-        // let mut fut = Box::pin(TokioContext::new(
-        //     client.send_group_msg(gid as i64, msg0.as_str(), false),
-        //     handle,
-        // ));
-        // let mid = tokio::runtime::Runtime::new()
-        // .unwrap()
-        // .block_on()
-        let mid = 
-        // (loop {
-        //     match fut.as_mut().poll(&mut Context::from_waker(&noop_waker())) {
-        //         Poll::Ready(v) => break v,
-        //         Poll::Pending => {
-        //             debug!("Pending..");
-        //             continue;
-        //         }
-        //     }
-        // })
-        self.client.send_group_msg_sync(gid, message.as_str(), false)
-        .map_err(|e| vm.new_value_error(format!("Failed to send message: {}", e)))?
-        .message_id;
+        let mid = self
+            .client
+            .send_group_msg_sync(gid, message.as_str(), false)
+            .map_err(|e| vm.new_value_error(format!("Failed to send message: {}", e)))?
+            .message_id;
         return Ok(PyInt::from(mid).into_ref(vm));
     }
     #[pymethod]
@@ -115,8 +95,10 @@ impl WrappedCountdownBot {
                 .map_err(|_| vm.new_value_error("int expected".to_string()))?
                 .as_bigint(),
         );
-        let resp = self.client.get_group_member_info_sync(group_id, user_id, false)
-        .map_err(|e| vm.new_value_error(format!("Failed to get group member info: {}", e)))?;
+        let resp = self
+            .client
+            .get_group_member_info_sync(group_id, user_id, false)
+            .map_err(|e| vm.new_value_error(format!("Failed to get group member info: {}", e)))?;
 
         let dict = PyDict::default();
         dict.get_or_insert(vm, PyStr::from("card").into_pyobject(vm), || {
@@ -131,7 +113,8 @@ impl WrappedCountdownBot {
     }
     #[pymethod]
     pub fn delete_msg(&self, mid: PyIntRef, vm: &VirtualMachine) -> PyResult<()> {
-        self.client.delete_message_sync(bigint_to_i64(mid.as_bigint()))
+        self.client
+            .delete_message_sync(bigint_to_i64(mid.as_bigint()))
             .map_err(|e| vm.new_value_error(format!("Failed to delete message: {}", e)))?;
         return Ok(());
     }

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 // #[derive(Deserialize, Serialize, Clone)]
 // pub struct DownloadInfo {
-    
+
 // }
 // impl Default for DownloadInfo {
 //     fn default() -> Self {
