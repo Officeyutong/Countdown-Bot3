@@ -66,9 +66,9 @@ pub trait BotPlugin: DowncastSync + Send + Sync {
     fn will_use_event_handler(&self) -> bool {
         return false;
     }
-    fn will_use_loop_handler(&self) -> bool {
-        return false;
-    }
+    // fn will_use_loop_handler(&self) -> bool {
+    //     return false;
+    // }
 }
 impl_downcast!(sync BotPlugin);
 pub type CTypePluginRegisterCallback = unsafe extern "C" fn(&mut dyn PluginRegistrar);
@@ -112,8 +112,8 @@ pub struct PluginWrapper {
     // pub(crate) use_command_handler: bool,
     #[allow(dead_code)]
     pub(crate) use_event_handler: bool,
-    #[allow(dead_code)]
-    pub(crate) use_loop_handler: bool,
+    // #[allow(dead_code)]
+    // pub(crate) use_loop_handler: bool,
 }
 pub enum PluginLoadSource {
     Static,
@@ -150,7 +150,7 @@ impl PluginManager {
                 plugin_instance: plugin_inst.clone(),
                 // use_command_handler: plugin_obj_guard.will_use_command_handler(),
                 use_event_handler: plugin_obj_guard.will_use_event_handler(),
-                use_loop_handler: plugin_obj_guard.will_use_loop_handler(),
+                // use_loop_handler: plugin_obj_guard.will_use_loop_handler(),
             })),
         );
         Ok(())
@@ -201,7 +201,7 @@ impl PluginManager {
                 plugin_instance: plugin_inst.clone(),
                 // use_command_handler: plugin_obj_guard.will_use_command_handler(),
                 use_event_handler: plugin_obj_guard.will_use_event_handler(),
-                use_loop_handler: plugin_obj_guard.will_use_loop_handler(),
+                // use_loop_handler: plugin_obj_guard.will_use_loop_handler(),
             })),
         );
         // self.libraries.insert(registrar.name, registrar.lib);
