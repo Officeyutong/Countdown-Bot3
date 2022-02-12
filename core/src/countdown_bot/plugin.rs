@@ -1,7 +1,6 @@
 use super::bot;
 use super::client::CountdownBotClient;
 use super::command::SenderType;
-use super::event::EventContainer;
 use downcast_rs::{impl_downcast, DowncastSync};
 use libloading::Library;
 use log::info;
@@ -43,9 +42,9 @@ pub trait BotPlugin: DowncastSync + Send + Sync {
         return Ok(());
     }
     fn get_meta(&self) -> PluginMeta;
-    async fn on_event(&mut self, _event: EventContainer) -> HookResult<()> {
-        return Ok(());
-    }
+    // async fn on_event(&mut self, _event: EventContainer) -> HookResult<()> {
+    //     return Ok(());
+    // }
     async fn on_command(
         &mut self,
         _command: String,

@@ -1,13 +1,17 @@
+use super::{AbstractEvent, UnknownEvent};
 use anyhow::anyhow;
+use countdown_bot_proc_macro::impl_upcast;
 use serde::Deserialize;
 use serde_json::Value as JsonValue;
 #[derive(Deserialize, Debug, Clone)]
+#[impl_upcast(AbstractEvent)]
 pub enum MessageEvent {
     Private(PrivateMessageEvent),
     Group(GroupMessageEvent),
     Guild(GuildMessageEvent),
     Unknown,
 }
+
 impl MessageEvent {
     pub fn from_json(
         json: &JsonValue,
@@ -72,7 +76,7 @@ pub struct PrivateMessageEvent {
     pub font: i64,
     pub sender: PrivateEventSender,
 }
-
+impl AbstractEvent for PrivateMessageEvent {}
 #[derive(Deserialize, Debug, Clone, Hash, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupMessageSubType {
@@ -94,6 +98,7 @@ pub struct GroupMessageEvent {
     pub font: i64,
     pub sender: GroupMessageSender,
 }
+impl AbstractEvent for GroupMessageEvent {}
 #[derive(Deserialize, Debug, Clone, Hash, PartialEq, Eq)]
 pub struct AnonymousData {
     pub id: i64,
@@ -131,6 +136,7 @@ pub struct GuildMessageEvent {
     pub sender: GuildMessageSender,
     pub message: String,
 }
+impl AbstractEvent for GuildMessageEvent {}
 #[derive(Deserialize, Debug, Clone, Hash, PartialEq, Eq)]
 pub struct GuildMessageSender {
     pub user_id: Option<i64>,

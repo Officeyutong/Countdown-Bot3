@@ -2,17 +2,20 @@ use async_trait::async_trait;
 use countdown_bot3::{
     countdown_bot::{
         bot,
-        client::CountdownBotClient,
+        client::{CountdownBotClient, ResultType},
         event::{
-            notice::{GroupMembersReduceSubType, NoticeEvent},
-            Event, EventContainer,
+            manager::{EventListener, WrappedOOPEventContainer},
+            notice::{
+                GroupMembersIncreaseEvent, GroupMembersReduceEvent, GroupMembersReduceSubType,
+            },
         },
-        plugin::{BotPlugin, HookResult, PluginMeta},
+        plugin::{BotPlugin, BotPluginWrapped, HookResult, PluginMeta},
         utils::load_config_or_save_default,
     },
     export_static_plugin,
 };
 use serde::{Deserialize, Serialize};
+use std::any::TypeId;
 static PLUGIN_NAME: &str = "group_noticer";
 
 #[derive(Deserialize, Serialize)]
@@ -46,6 +49,9 @@ impl BotPlugin for GroupNoticerPlugin {
         self.config = Some(load_config_or_save_default::<GroupNoticerConfig>(
             &bot.ensure_plugin_data_dir(PLUGIN_NAME)?,
         )?);
+        bot.register_event_handler(TypeId::of::<GroupMembersIncreaseEvent>(), MyEventHandler {});
+        bot.register_event_handler(TypeId::of::<GroupMembersReduceEvent>(), MyEventHandler {});
+
         Ok(())
     }
     fn on_before_start(
@@ -63,55 +69,61 @@ impl BotPlugin for GroupNoticerPlugin {
             version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
-    async fn on_event(&mut self, event: EventContainer) -> HookResult<()> {
-        let config = self.config.as_ref().unwrap();
-        let client = self.client.clone().unwrap();
-        match event.event {
-            Event::Notice(evt) => match evt {
-                NoticeEvent::GroupMembersIncrease(inc) => {
-                    let group_id = inc.group_id;
-                    if !config.disable_groups.contains(&group_id) {
-                        client
-                            .send_group_msg(
-                                group_id,
-                                config
-                                    .welcome_message
-                                    .replace("{at}", format!("[CQ:at,qq={}]", inc.user_id).as_str())
-                                    .as_str(),
-                                false,
-                            )
-                            .await?;
-                    }
-                }
-                NoticeEvent::GroupMembersReduce(dec) => {
-                    let group_id = dec.group_id;
-                    let uid = dec.user_id;
-                    if !config.disable_groups.contains(&group_id) {
-                        let stranger_info = client.get_stranger_info(uid, false).await?;
-                        let str = match dec.sub_type {
-                            GroupMembersReduceSubType::Leave => {
-                                format!(
-                                    "用户 {}({}) 已退出本群",
-                                    stranger_info.user_id, stranger_info.nickname
-                                )
-                            }
-                            GroupMembersReduceSubType::Kick => {
-                                format!(
-                                    "用户 {}({}) 已被踢出本群",
-                                    stranger_info.user_id, stranger_info.nickname
-                                )
-                            }
-                            GroupMembersReduceSubType::KickMe => return Ok(()),
-                        };
-                        client.send_group_msg(group_id, str.as_str(), true).await?;
-                    }
-                }
+}
 
-                _ => {}
-            },
-            _ => {}
-        }
-        Ok(())
+struct MyEventHandler;
+#[async_trait::async_trait]
+impl EventListener for MyEventHandler {
+    async fn on_event(
+        &mut self,
+        event: WrappedOOPEventContainer,
+        plugin: BotPluginWrapped,
+    ) -> ResultType<()> {
+        let plugin_guard = plugin.read().await;
+        let casted = plugin_guard.downcast_ref::<GroupNoticerPlugin>().unwrap();
+        let config = casted.config.as_ref().unwrap();
+        let client = casted.client.as_ref().unwrap();
+        let event_obj = event.read().await.event.clone();
+        if let Some(inc) = event_obj.downcast_ref::<GroupMembersIncreaseEvent>() {
+            let group_id = inc.group_id;
+            if !config.disable_groups.contains(&group_id) {
+                client
+                    .send_group_msg(
+                        group_id,
+                        config
+                            .welcome_message
+                            .replace("{at}", format!("[CQ:at,qq={}]", inc.user_id).as_str())
+                            .as_str(),
+                        false,
+                    )
+                    .await?;
+            }
+        };
+        if let Some(dec) = event_obj.downcast_ref::<GroupMembersReduceEvent>() {
+            let group_id = dec.group_id;
+            let uid = dec.user_id;
+            if !config.disable_groups.contains(&group_id) {
+                let stranger_info = client.get_stranger_info(uid, false).await?;
+                let str = match dec.sub_type {
+                    GroupMembersReduceSubType::Leave => {
+                        format!(
+                            "用户 {}({}) 已退出本群",
+                            stranger_info.user_id, stranger_info.nickname
+                        )
+                    }
+                    GroupMembersReduceSubType::Kick => {
+                        format!(
+                            "用户 {}({}) 已被踢出本群",
+                            stranger_info.user_id, stranger_info.nickname
+                        )
+                    }
+                    GroupMembersReduceSubType::KickMe => return Ok(()),
+                };
+                client.send_group_msg(group_id, str.as_str(), true).await?;
+            }
+        };
+
+        return Ok(());
     }
 }
 

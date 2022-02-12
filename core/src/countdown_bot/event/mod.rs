@@ -1,9 +1,12 @@
-pub mod handle;
+pub mod manager;
 pub mod message;
 pub mod meta;
 pub mod notice;
 pub mod request;
+use std::sync::Arc;
+
 use anyhow::anyhow;
+use downcast_rs::Downcast;
 use message::MessageEvent;
 use serde::Deserialize;
 use serde_json::Value as JsonValue;
@@ -17,9 +20,21 @@ pub enum Event {
     Meta(MetaEvent),
     Unknown,
 }
-#[derive(Deserialize, Debug, Clone)]
+impl Event {
+    pub fn perform_upcast(self) -> Arc<dyn AbstractEvent> {
+        return match self {
+            Event::Message(v) => v.to_event_trait(),
+            Event::Notice(v) => v.to_event_trait(),
+            Event::Request(v) => v.to_event_trait(),
+            Event::Meta(v) => v.to_event_trait(),
+            Event::Unknown => UnknownEvent::get_instance(),
+        };
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct EventContainer {
-    pub raw_value: JsonValue,
+    pub raw_value: Arc<JsonValue>,
     pub time: u64,
     pub self_id: u64,
     pub post_type: String,
@@ -37,7 +52,7 @@ impl EventContainer {
                 .as_str()
                 .ok_or("Expected string for 'post_type'")?;
             return Ok(EventContainer {
-                raw_value: json.clone(),
+                raw_value: Arc::new(json.clone()),
                 time: val
                     .get("time")
                     .ok_or(anyhow!("Missing 'time' field"))?
@@ -60,5 +75,27 @@ impl EventContainer {
         } else {
             return Err(Box::from(anyhow::anyhow!("Expected a JSON object!")));
         }
+    }
+}
+
+pub trait AbstractEvent: Downcast + Sync + Send {}
+
+downcast_rs::impl_downcast!(AbstractEvent);
+
+pub type ConcreteEventWrapper = Arc<dyn AbstractEvent>;
+pub struct OOPEventContainer {
+    pub event: ConcreteEventWrapper,
+    pub raw_value: Arc<JsonValue>,
+    pub time: u64,
+    pub self_id: u64,
+    pub post_type: String,
+}
+
+pub struct UnknownEvent;
+impl AbstractEvent for UnknownEvent {}
+
+impl UnknownEvent {
+    pub fn get_instance() -> ConcreteEventWrapper {
+        return Arc::new(Self);
     }
 }

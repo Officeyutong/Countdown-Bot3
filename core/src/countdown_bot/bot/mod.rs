@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use std::any::TypeId;
 use std::collections::HashSet;
 use std::path;
 use std::sync::Arc;
@@ -8,7 +9,8 @@ pub type ReceiverMap = std::collections::HashMap<String, SingleCallSender>;
 use super::client::{CountdownBotClient, SingleCallSender};
 use super::command::{Command, CommandManager};
 use super::config::CountdownBotConfig;
-use super::plugin::{PluginManager, PluginRegisterCallback};
+use super::event::manager::{EventListener, EventManager};
+use super::plugin::{BotPluginWrapped, PluginManager, PluginRegisterCallback};
 use super::schedule_loop::handler::ScheduleLoopHandler;
 use super::schedule_loop::ScheduleLoopManager;
 use super::state_hook::StateHookManager;
@@ -45,6 +47,8 @@ pub struct CountdownBot {
     schedule_loop_manager: Option<ScheduleLoopManager>,
     plugin_static_register_hooks: Vec<PluginRegisterCallback>,
     salvo_router: Option<salvo::Router>,
+    event_manager: EventManager,
+    current_processing_plugin: Option<BotPluginWrapped>,
 }
 mod builtin_command_impl;
 mod dispatch_impl;
@@ -60,6 +64,20 @@ impl CountdownBot {
     }
     pub fn create_client(&self) -> CountdownBotClient {
         return self.client.as_ref().unwrap().clone();
+    }
+    pub fn register_event_handler<T: EventListener>(&mut self, event_type: TypeId, listener: T) {
+        self.register_event_handler_async(event_type, Arc::new(Mutex::new(listener)));
+    }
+    pub fn register_event_handler_async(
+        &mut self,
+        event_type: TypeId,
+        listener: Arc<Mutex<dyn EventListener>>,
+    ) {
+        self.event_manager.register_listener(
+            event_type,
+            listener,
+            self.current_processing_plugin.clone().unwrap(),
+        );
     }
     pub fn register_schedule(
         &mut self,
@@ -120,6 +138,8 @@ impl CountdownBot {
             schedule_loop_manager: Some(ScheduleLoopManager::new()),
             plugin_static_register_hooks: vec![],
             salvo_router: Some(salvo::Router::new()),
+            event_manager: EventManager::new(),
+            current_processing_plugin: None,
         }
     }
     pub async fn init(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>> {

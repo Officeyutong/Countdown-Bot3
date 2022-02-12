@@ -1,14 +1,18 @@
 use std::error::Error;
 
 use anyhow::anyhow;
+use countdown_bot_proc_macro::impl_upcast;
 use serde::{Deserialize, Serialize};
 use serde_json::{from_value, Value};
 
+use super::AbstractEvent;
+use super::UnknownEvent;
 #[derive(Deserialize, Debug, Clone)]
+#[impl_upcast(AbstractEvent)]
 pub enum RequestEvent {
     FriendRequest(FriendRequestEvent),
     GroupRequest(GroupRequestEvent),
-    Unknow,
+    Unknown,
 }
 
 impl RequestEvent {
@@ -24,7 +28,7 @@ impl RequestEvent {
                 {
                     "friend" => RequestEvent::FriendRequest(from_value::<FriendRequestEvent>(t)?),
                     "group" => RequestEvent::GroupRequest(from_value::<GroupRequestEvent>(t)?),
-                    _ => RequestEvent::Unknow,
+                    _ => RequestEvent::Unknown,
                 },
             );
         } else {
@@ -39,6 +43,7 @@ pub struct FriendRequestEvent {
     pub comment: String,
     pub flag: String,
 }
+impl AbstractEvent for FriendRequestEvent {}
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupRequestSubType {
@@ -53,3 +58,4 @@ pub struct GroupRequestEvent {
     pub comment: String,
     pub flag: String,
 }
+impl AbstractEvent for GroupRequestEvent {}

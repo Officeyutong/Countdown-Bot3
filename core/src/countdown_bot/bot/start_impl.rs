@@ -241,7 +241,7 @@ impl CountdownBot {
                                         ) {
                                             Ok(json) => {
                                                 match EventContainer::from_json(&json) {
-                                                    Ok(event) => {self.dispatch_event(&event).await;}
+                                                    Ok(event) => {self.dispatch_event(event).await;}
                                                     Err(e) => error!("Malformed event object: {}\n{}", e, json)
                                                 }
                                             }

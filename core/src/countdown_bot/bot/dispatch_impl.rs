@@ -2,15 +2,16 @@ use std::sync::Arc;
 
 use crate::countdown_bot::{
     command::{Command, CommandSender, SenderType},
-    event::{message::MessageEvent, Event, EventContainer},
+    event::{message::MessageEvent, Event, EventContainer, OOPEventContainer},
 };
 use anyhow::anyhow;
 use log::{error, info, trace};
+use tokio::sync::RwLock;
 
 use super::CountdownBot;
 
 impl CountdownBot {
-    pub async fn dispatch_event(&mut self, event: &EventContainer) {
+    pub async fn dispatch_event(&mut self, event: EventContainer) {
         if let Event::Message(ref msg_evt) = event.event {
             let (msg_line, sender) = match msg_evt {
                 MessageEvent::Private(e) => (&e.message, SenderType::Private(e.clone())),
@@ -35,25 +36,34 @@ impl CountdownBot {
                 msg_line
             );
         }
-        for (_, val) in self.plugin_manager.plugins.iter() {
-            let plugin_instance_ref = val.read().await.plugin_instance.clone();
-            let event_cloned = event.clone();
-            tokio::spawn(async move {
-                let resp = plugin_instance_ref
-                    .write()
-                    .await
-                    .on_event(event_cloned.clone())
-                    .await;
-                if let Err(e) = resp {
-                    error!(
-                        "Error occured when dispatching event {:?}:\n{}",
-                        event_cloned, e
-                    );
-                }
-            });
-
-            // .await;
-        }
+        let oop_event = OOPEventContainer {
+            event: event.event.perform_upcast(),
+            raw_value: event.raw_value,
+            time: event.time,
+            self_id: event.self_id,
+            post_type: event.post_type,
+        };
+        self.event_manager
+            .dispatch_event(Arc::new(RwLock::new(oop_event)))
+            .await;
+        // for (_, val) in self.plugin_manager.plugins.iter() {
+        //     let plugin_instance_ref = val.read().await.plugin_instance.clone();
+        //     let event_cloned = event.clone();
+        //     tokio::spawn(async move {
+        //         let resp = plugin_instance_ref
+        //             .write()
+        //             .await
+        //             .on_event(event_cloned.clone())
+        //             .await;
+        //         if let Err(e) = resp {
+        //             error!(
+        //                 "Error occured when dispatching event {:?}:\n{}",
+        //                 event_cloned, e
+        //             );
+        //         }
+        //     });
+        //     // .await;
+        // }
     }
     pub fn in_command_blacklist_check(&self, sender: &SenderType) -> bool {
         let user_id = match sender {

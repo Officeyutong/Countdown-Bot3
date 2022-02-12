@@ -82,6 +82,7 @@ impl CountdownBot {
                 .as_mut()
                 .unwrap()
                 .set_current_plugin(plugin.read().await.plugin_instance.clone());
+            self.current_processing_plugin = Some(plugin.read().await.plugin_instance.clone());
             let guard1 = plugin.read().await;
             let mut plugin_inst = guard1.plugin_instance.write().await;
             // plugin..use_command_handler = plugin_inst.will_use_command_handler();
@@ -96,6 +97,7 @@ impl CountdownBot {
                 info!("Loaded: name={}, meta={:?}", name, plugin.read().await.meta);
             };
         }
+        self.current_processing_plugin = None;
         info!(
             "Registered {} commands",
             self.command_manager.command_map.len()

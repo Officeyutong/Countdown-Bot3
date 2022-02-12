@@ -4,15 +4,18 @@ use countdown_bot3::{
         bot,
         client::{CountdownBotClient, ResultType},
         command::{Command, SenderType},
-        event::{message::MessageEvent, Event, EventContainer},
-        plugin::{BotPlugin, HookResult, PluginMeta},
+        event::{
+            manager::{EventListener, WrappedOOPEventContainer},
+            message::GroupMessageEvent,
+        },
+        plugin::{BotPlugin, BotPluginWrapped, HookResult, PluginMeta},
         utils::load_config_or_save_default,
     },
     export_static_plugin,
 };
 use log::debug;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{any::TypeId, collections::HashMap};
 static PLUGIN_NAME: &str = "fun";
 
 #[derive(Deserialize, Serialize)]
@@ -60,6 +63,7 @@ impl BotPlugin for FunPlugin {
         bot.register_command(Command::new("阿克").description("阿克").enable_all())?;
         bot.register_command(Command::new("爆零").description("qwq").enable_all())?;
         bot.register_command(Command::new("凉了").description("凉了？").enable_all())?;
+        bot.register_event_handler(TypeId::of::<GroupMessageEvent>(), MyEventHandler {});
         Ok(())
     }
     fn on_before_start(
@@ -77,25 +81,6 @@ impl BotPlugin for FunPlugin {
             version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
-    async fn on_event(&mut self, event: EventContainer) -> HookResult<()> {
-        let config = self.config.as_ref().unwrap();
-        let client = self.client.clone().unwrap();
-        match event.event {
-            Event::Message(mevt) => match mevt {
-                MessageEvent::Group(grpevt) => {
-                    let gid = grpevt.group_id;
-                    if !config.blacklist_groups.contains(&gid) {
-                        handle_repeat(&mut self.repeat_data, gid, client, &grpevt.message, config)
-                            .await?;
-                    }
-                }
-                _ => {}
-            },
-            _ => {}
-        };
-        Ok(())
-    }
-
     async fn on_command(
         &mut self,
         command: String,
@@ -125,10 +110,32 @@ impl BotPlugin for FunPlugin {
 
 export_static_plugin!(PLUGIN_NAME, FunPlugin::default());
 
+struct MyEventHandler;
+#[async_trait]
+impl EventListener for MyEventHandler {
+    async fn on_event(
+        &mut self,
+        event: WrappedOOPEventContainer,
+        plugin: BotPluginWrapped,
+    ) -> ResultType<()> {
+        let mut plugin_guard = plugin.write().await;
+        let casted = plugin_guard.downcast_mut::<FunPlugin>().unwrap();
+        let event_guard = event.read().await.event.clone();
+        let gevt = event_guard.downcast_ref::<GroupMessageEvent>().unwrap();
+        let config = casted.config.as_ref().unwrap();
+        let client = casted.client.as_ref().unwrap();
+        let gid = gevt.group_id;
+        if !config.blacklist_groups.contains(&gid) {
+            handle_repeat(&mut casted.repeat_data, gid, client, &gevt.message, config).await?;
+        }
+        return Ok(());
+    }
+}
+
 async fn handle_repeat(
     data: &mut HashMap<i64, RepeatData>,
     gid: i64,
-    client: CountdownBotClient,
+    client: &CountdownBotClient,
     msg: &String,
     cfg: &FunConfig,
 ) -> ResultType<()> {

@@ -1,14 +1,18 @@
 use std::error::Error;
 
 use anyhow::anyhow;
+use countdown_bot_proc_macro::impl_upcast;
 use serde::Deserialize;
 use serde_json::{from_value, Value};
 
+use super::AbstractEvent;
+use super::UnknownEvent;
 #[derive(Deserialize, Debug, Clone)]
+#[impl_upcast(AbstractEvent)]
 pub enum MetaEvent {
     Lifecycle(LifecycleEvent),
     Heartbeat(HeartbeatEvent),
-    Unknow,
+    Unknown,
 }
 
 impl MetaEvent {
@@ -24,7 +28,7 @@ impl MetaEvent {
                 {
                     "heartbeat" => MetaEvent::Heartbeat(from_value::<HeartbeatEvent>(t)?),
                     "lifecycle" => MetaEvent::Lifecycle(from_value::<LifecycleEvent>(t)?),
-                    _ => MetaEvent::Unknow,
+                    _ => MetaEvent::Unknown,
                 },
             );
         } else {
@@ -38,6 +42,7 @@ pub struct HeartbeatEvent {
     pub interval: i64,
     pub status: Value,
 }
+impl AbstractEvent for HeartbeatEvent {}
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum LifecycleEventSubType {
@@ -49,3 +54,4 @@ pub enum LifecycleEventSubType {
 pub struct LifecycleEvent {
     pub sub_type: LifecycleEventSubType,
 }
+impl AbstractEvent for LifecycleEvent {}

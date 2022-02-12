@@ -1,11 +1,15 @@
 use std::error::Error;
 
 use anyhow::anyhow;
+use countdown_bot_proc_macro::impl_upcast;
 use serde::Deserialize;
 use serde_json::{from_value, Value};
 
 use crate::countdown_bot::client::guild::SubChannelInfo;
+
+use super::{AbstractEvent, UnknownEvent};
 #[derive(Deserialize, Debug, Clone)]
+#[impl_upcast(AbstractEvent)]
 pub enum NoticeEvent {
     GroupFileUpload(GroupFileUploadEvent),
     GroupAdminChange(GroupAdminChangeEvent),
@@ -19,9 +23,9 @@ pub enum NoticeEvent {
     GroupRedbagLuckKing(GroupRedbagLuckKingEvent),
     GroupMemberHonorChange(GroupMemberHonorChangeEvent),
     GuildMessageReactionsUpdatedEvent(MessageReactionsUpdatedEvent),
-    GuildSubchannelMessageUpdated(SubChannelMessageUpdated),
-    GuildSubchannelCreated(SubChannelCreated),
-    GuildSubchannelDestroyed(SubChannelDestroyed),
+    GuildSubchannelMessageUpdated(SubChannelMessageUpdatedEvent),
+    GuildSubchannelCreated(SubChannelCreatedEvent),
+    GuildSubchannelDestroyed(SubChannelDestroyedEvent),
     Unknown,
 }
 impl NoticeEvent {
@@ -83,6 +87,7 @@ pub struct GroupFileUploadEvent {
     pub user_id: i64,
     pub file: GroupFileInfo,
 }
+impl AbstractEvent for GroupFileUploadEvent {}
 #[derive(Deserialize, Debug, Clone)]
 pub struct GroupFileInfo {
     pub id: String,
@@ -103,6 +108,7 @@ pub struct GroupAdminChangeEvent {
     pub group_id: i64,
     pub user_id: i64,
 }
+impl AbstractEvent for GroupAdminChangeEvent {}
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupMembersReduceSubType {
@@ -117,6 +123,7 @@ pub struct GroupMembersReduceEvent {
     pub operator_id: i64,
     pub user_id: i64,
 }
+impl AbstractEvent for GroupMembersReduceEvent {}
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupMembersIncreaseSubtype {
@@ -131,7 +138,7 @@ pub struct GroupMembersIncreaseEvent {
     pub operator_id: i64,
     pub user_id: i64,
 }
-
+impl AbstractEvent for GroupMembersIncreaseEvent {}
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupMuteSubType {
@@ -147,12 +154,12 @@ pub struct GroupMuteEvent {
     pub user_id: i64,
     pub duration: i64,
 }
-
+impl AbstractEvent for GroupMuteEvent {}
 #[derive(Deserialize, Debug, Clone)]
 pub struct FriendAddEvent {
     pub user_id: i64,
 }
-
+impl AbstractEvent for FriendAddEvent {}
 #[derive(Deserialize, Debug, Clone)]
 pub struct GroupMessageRecallEvent {
     pub group_id: i64,
@@ -160,26 +167,27 @@ pub struct GroupMessageRecallEvent {
     pub operator_id: i64,
     pub message_id: i64,
 }
-
+impl AbstractEvent for GroupMessageRecallEvent {}
 #[derive(Deserialize, Debug, Clone)]
 pub struct FriendMessageRecallEvent {
     pub user_id: i64,
     pub message_id: i64,
 }
-
+impl AbstractEvent for FriendMessageRecallEvent {}
 #[derive(Deserialize, Debug, Clone)]
 pub struct GroupPokeEvent {
     pub group_id: i64,
     pub user_id: i64,
     pub target_id: i64,
 }
-
+impl AbstractEvent for GroupPokeEvent {}
 #[derive(Deserialize, Debug, Clone)]
 pub struct GroupRedbagLuckKingEvent {
     pub group_id: i64,
     pub user_id: i64,
     pub target_id: i64,
 }
+impl AbstractEvent for GroupRedbagLuckKingEvent {}
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupMemberHonorChangeSubType {
@@ -193,6 +201,7 @@ pub struct GroupMemberHonorChangeEvent {
     pub honor_type: GroupMemberHonorChangeSubType,
     pub user_id: i64,
 }
+impl AbstractEvent for GroupMemberHonorChangeEvent {}
 #[derive(Deserialize, Debug, Clone)]
 pub struct ReactionInfo {
     pub emoji_id: String,
@@ -210,8 +219,9 @@ pub struct MessageReactionsUpdatedEvent {
     pub message_id: String,
     pub current_reactions: Vec<ReactionInfo>,
 }
+impl AbstractEvent for MessageReactionsUpdatedEvent {}
 #[derive(Deserialize, Debug, Clone)]
-pub struct SubChannelMessageUpdated {
+pub struct SubChannelMessageUpdatedEvent {
     pub guild_id: String,
     pub channel_id: String,
     //操作者
@@ -221,8 +231,9 @@ pub struct SubChannelMessageUpdated {
     pub old_info: SubChannelInfo,
     pub new_info: SubChannelInfo,
 }
+impl AbstractEvent for SubChannelMessageUpdatedEvent {}
 #[derive(Deserialize, Debug, Clone)]
-pub struct SubChannelCreated {
+pub struct SubChannelCreatedEvent {
     pub guild_id: String,
     pub channel_id: String,
     //操作者
@@ -231,8 +242,9 @@ pub struct SubChannelCreated {
     pub operator_id: String,
     pub channel_info: SubChannelInfo,
 }
+impl AbstractEvent for SubChannelCreatedEvent {}
 #[derive(Deserialize, Debug, Clone)]
-pub struct SubChannelDestroyed {
+pub struct SubChannelDestroyedEvent {
     pub guild_id: String,
     pub channel_id: String,
     //操作者
@@ -241,3 +253,4 @@ pub struct SubChannelDestroyed {
     pub operator_id: String,
     pub channel_info: SubChannelInfo,
 }
+impl AbstractEvent for SubChannelDestroyedEvent {}

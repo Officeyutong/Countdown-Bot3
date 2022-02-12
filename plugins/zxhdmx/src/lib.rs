@@ -1,4 +1,5 @@
 use std::{
+    any::TypeId,
     collections::HashMap,
     path::PathBuf,
     sync::{Arc, Mutex},
@@ -12,8 +13,11 @@ use countdown_bot3::{
         bot::{self, CountdownBot},
         client::{CountdownBotClient, ResultType},
         command::{Command, SenderType},
-        event::{message::MessageEvent, Event, EventContainer},
-        plugin::{BotPlugin, HookResult, PluginMeta},
+        event::{
+            manager::{EventListener, WrappedOOPEventContainer},
+            message::GroupMessageEvent,
+        },
+        plugin::{BotPlugin, BotPluginWrapped, HookResult, PluginMeta},
         utils::{load_config_or_save_default, SubUrlWrapper},
     },
     export_static_plugin,
@@ -109,6 +113,7 @@ impl BotPlugin for ZxhdmxPlugin {
                 .description("重新加载zxhdmx的游戏内容数据"),
         )
         .unwrap();
+        bot.register_event_handler(TypeId::of::<GroupMessageEvent>(), MyEventHandler {});
         self.setup_salvo(bot);
         Ok(())
     }
@@ -158,28 +163,6 @@ impl BotPlugin for ZxhdmxPlugin {
             description: String::from("真心话大冒险"),
             version: env!("CARGO_PKG_VERSION").to_string(),
         }
-    }
-    async fn on_event(&mut self, event: EventContainer) -> HookResult<()> {
-        let (user_id, group_id, message) = match &event.event {
-            Event::Message(mevt) => match mevt {
-                MessageEvent::Group(gevt) => (gevt.user_id, gevt.group_id, gevt.message.clone()),
-                _ => return Ok(()),
-            },
-            _ => return Ok(()),
-        };
-        let pyobj = if let Some(game_obj) = self.game_objects.lock().unwrap().get(&group_id) {
-            game_obj.clone()
-        } else {
-            return Ok(());
-        };
-        let inpr = self.py_inpr.clone();
-        let local_client = self.client.clone().unwrap();
-        tokio::task::spawn_blocking(move || {
-            handle_event(user_id, group_id, inpr, pyobj, message, local_client)
-                .map_err(|e| anyhow!("{}", e))
-        })
-        .await??;
-        Ok(())
     }
     async fn on_command(
         &mut self,
@@ -306,4 +289,34 @@ fn init_files(dir_path: &PathBuf) -> ResultType<()> {
         }
     }
     return Ok(());
+}
+
+struct MyEventHandler;
+#[async_trait]
+impl EventListener for MyEventHandler {
+    async fn on_event(
+        &mut self,
+        event: WrappedOOPEventContainer,
+        plugin: BotPluginWrapped,
+    ) -> ResultType<()> {
+        debug!("Entered event handler..");
+        let plugin_guard = plugin.read().await;
+        let casted = plugin_guard.downcast_ref::<ZxhdmxPlugin>().unwrap();
+        let event_guard = event.read().await.event.clone();
+        let gevt = event_guard.downcast_ref::<GroupMessageEvent>().unwrap();
+        let (user_id, group_id, message) = (gevt.user_id, gevt.group_id, gevt.message.clone());
+        let pyobj = if let Some(game_obj) = casted.game_objects.lock().unwrap().get(&group_id) {
+            game_obj.clone()
+        } else {
+            return Ok(());
+        };
+        let inpr = casted.py_inpr.clone();
+        let local_client = casted.client.clone().unwrap();
+        tokio::task::spawn_blocking(move || {
+            handle_event(user_id, group_id, inpr, pyobj, message, local_client)
+                .map_err(|e| anyhow!("{}", e))
+        })
+        .await??;
+        return Ok(());
+    }
 }
