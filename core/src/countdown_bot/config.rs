@@ -17,6 +17,7 @@ pub struct CountdownBotConfig {
     pub blacklist_users: Vec<i64>,
     pub command_cooldown: u64,
     pub web_server: WebServerProps,
+    pub logging_level: String,
 }
 impl Default for WebServerProps {
     fn default() -> Self {
@@ -40,6 +41,7 @@ impl Default for CountdownBotConfig {
             blacklist_users: vec![],
             command_cooldown: 0,
             web_server: WebServerProps::default(),
+            logging_level: "info".to_string(),
         }
     }
 }

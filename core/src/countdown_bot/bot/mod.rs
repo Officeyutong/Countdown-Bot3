@@ -164,7 +164,7 @@ impl CountdownBot {
             {
                 match self.config.debug {
                     true => Logger::try_with_str("debug"),
-                    false => Logger::try_with_str("info"),
+                    false => Logger::try_with_str(&self.config.logging_level),
                 }
             }?
             .format(opt_format)
