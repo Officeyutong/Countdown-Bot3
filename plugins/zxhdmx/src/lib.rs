@@ -304,7 +304,7 @@ impl EventListener for MyEventHandler {
         let casted = plugin_guard.downcast_ref::<ZxhdmxPlugin>().unwrap();
         let event_guard = event.read().await.event.clone();
         let gevt = event_guard.downcast_ref::<GroupMessageEvent>().unwrap();
-        let (user_id, group_id, message) = (gevt.user_id, gevt.group_id, gevt.message.clone());
+        let (user_id, group_id, message) = (gevt.user_id, gevt.group_id, gevt.raw_message.clone());
         let pyobj = if let Some(game_obj) = casted.game_objects.lock().unwrap().get(&group_id) {
             game_obj.clone()
         } else {

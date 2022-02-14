@@ -232,7 +232,7 @@ impl CommandSender {
         }
     }
 }
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub enum SenderType {
     Console(ConsoleSender),
     Private(PrivateMessageEvent),

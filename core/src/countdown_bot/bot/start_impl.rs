@@ -242,7 +242,10 @@ impl CountdownBot {
                                             Ok(json) => {
                                                 match EventContainer::from_json(&json) {
                                                     Ok(event) => {self.dispatch_event(event).await;}
-                                                    Err(e) => error!("Malformed event object: {}\n{}", e, json)
+                                                    Err(e) => {
+                                                        error!("Malformed event object: {}\n{}", e, json);
+                                                        self.dispatch_event(EventContainer::from_json_unknown(&json).map_err(|e|anyhow!("Error occurred when handling malformed event: {}",e))?).await;
+                                                    }
                                                 }
                                             }
                                             Err(err) => {

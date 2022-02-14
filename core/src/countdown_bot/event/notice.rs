@@ -225,7 +225,7 @@ pub struct SubChannelMessageUpdatedEvent {
     pub guild_id: String,
     pub channel_id: String,
     //操作者
-    pub user_id: String,
+    pub user_id: i64,
     // 操作者
     pub operator_id: String,
     pub old_info: SubChannelInfo,
@@ -237,7 +237,7 @@ pub struct SubChannelCreatedEvent {
     pub guild_id: String,
     pub channel_id: String,
     //操作者
-    pub user_id: String,
+    pub user_id: i64,
     // 操作者
     pub operator_id: String,
     pub channel_info: SubChannelInfo,
@@ -248,7 +248,7 @@ pub struct SubChannelDestroyedEvent {
     pub guild_id: String,
     pub channel_id: String,
     //操作者
-    pub user_id: String,
+    pub user_id: i64,
     // 操作者
     pub operator_id: String,
     pub channel_info: SubChannelInfo,

@@ -12,6 +12,8 @@ use serde::Deserialize;
 use serde_json::Value as JsonValue;
 
 use self::{meta::MetaEvent, notice::NoticeEvent, request::RequestEvent};
+
+use super::client::ResultType;
 #[derive(Deserialize, Debug, Clone)]
 pub enum Event {
     Message(MessageEvent),
@@ -42,6 +44,22 @@ pub struct EventContainer {
 }
 
 impl EventContainer {
+    pub fn from_json_unknown(json: &JsonValue) -> ResultType<EventContainer> {
+        #[derive(Deserialize)]
+        struct LocalStruct {
+            pub time: u64,
+            pub self_id: u64,
+            pub post_type: String,
+        }
+        let deser = serde_json::from_value::<LocalStruct>(json.clone())?;
+        return Ok(EventContainer {
+            time: deser.time,
+            self_id: deser.self_id,
+            post_type: deser.post_type,
+            event: Event::Unknown,
+            raw_value: Arc::new(json.clone()),
+        });
+    }
     pub fn from_json(
         json: &JsonValue,
     ) -> std::result::Result<EventContainer, Box<dyn std::error::Error>> {

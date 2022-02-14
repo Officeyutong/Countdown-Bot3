@@ -14,9 +14,9 @@ impl CountdownBot {
     pub async fn dispatch_event(&mut self, event: EventContainer) {
         if let Event::Message(ref msg_evt) = event.event {
             let (msg_line, sender) = match msg_evt {
-                MessageEvent::Private(e) => (&e.message, SenderType::Private(e.clone())),
-                MessageEvent::Group(e) => (&e.message, SenderType::Group(e.clone())),
-                MessageEvent::Guild(e) => (&e.message, SenderType::Guild(e.clone())),
+                MessageEvent::Private(e) => (e.raw_message.clone(), SenderType::Private(e.clone())),
+                MessageEvent::Group(e) => (e.raw_message.clone(), SenderType::Group(e.clone())),
+                MessageEvent::Guild(e) => (e.message.to_string(), SenderType::Guild(e.clone())),
                 MessageEvent::Unknown => return,
             };
             let mut ok_for_command = false;
@@ -95,9 +95,9 @@ impl CountdownBot {
         };
         let mut cmd_line = match &parsed_sender {
             SenderType::Console(evt) => evt.line.clone(),
-            SenderType::Private(evt) => evt.message.clone(),
-            SenderType::Group(evt) => evt.message.clone(),
-            SenderType::Guild(evt) => evt.message.clone(),
+            SenderType::Private(evt) => evt.raw_message.clone(),
+            SenderType::Group(evt) => evt.raw_message.clone(),
+            SenderType::Guild(evt) => evt.message.to_string(),
         };
         for prefix in self.config.command_prefix.iter() {
             if cmd_line.starts_with(prefix.as_str()) {

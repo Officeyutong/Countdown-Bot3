@@ -1,7 +1,39 @@
 use proc_macro::TokenStream;
 use quote::{quote, quote_spanned};
 use syn::{parse_macro_input, spanned::Spanned, Data, DeriveInput, Field, Ident, Variant};
-
+#[proc_macro_attribute]
+pub fn impl_cq_tostring(item: TokenStream, input: TokenStream) -> TokenStream {
+    let cqtype = parse_macro_input!(item as syn::Ident);
+    let ast = parse_macro_input!(input as DeriveInput);
+    let struct_data = match &ast.data {
+        Data::Struct(e) => e,
+        _ => {
+            return quote_spanned! {
+                ast.span() => compile_error!("Expected struct");
+            }
+            .into()
+        }
+    };
+    let fields = struct_data
+        .fields
+        .iter()
+        .map(|f| f.ident.as_ref().unwrap())
+        .collect::<Vec<&Ident>>();
+    let name = &ast.ident;
+    let output = quote! {
+        #ast
+        impl ToString for #name {
+            fn to_string(&self) -> String {
+                let mut out = String::from("[CQ:");
+                out.push_str(stringify!(#cqtype));
+                #(out.push(',');out.push_str(stringify!(#fields));out.push('=');out.push_str(self. #fields .to_string().as_str());)*
+                out.push(']');
+                return out;
+            }
+        }
+    };
+    return output.into();
+}
 #[proc_macro_attribute]
 pub fn impl_upcast(item: TokenStream, input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
