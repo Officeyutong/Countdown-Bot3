@@ -158,7 +158,12 @@ impl DockerRunnerPlugin {
             if line_overflow {
                 output.push_str("\n[超出行数已截断]");
             }
-            client.quick_send_by_sender(sender, &output).await?;
+            let gid = match sender {
+                SenderType::Group(v) => v.group_id,
+                _ => return Err(anyhow!("仅支持QQ群!").into()),
+            };
+            client.send_group_msg(gid, &output, true);
+            // client.quick_send_by_sender(sender, &output).await?;
         }
         return Ok(());
     }
