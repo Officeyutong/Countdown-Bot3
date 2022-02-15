@@ -1,4 +1,5 @@
 use countdown_bot3::countdown_bot::client::ResultType;
+use log::info;
 
 use crate::{exec_impl::ExecuteResult, MathPlugin};
 use anyhow::anyhow;
@@ -10,6 +11,7 @@ impl MathPlugin {
     ) -> ResultType<ExecuteResult> {
         let config = self.config.as_ref().unwrap();
         let template = include_str!("template.py");
+        info!("Executing {}", code);
         let replaced_template = template.replace("{CODE}", code).replace(
             "{PACKAGES}",
             &serde_json::to_string(&config.latex_packages)?,

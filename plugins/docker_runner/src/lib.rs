@@ -107,9 +107,10 @@ impl DockerRunnerPlugin {
         args: Vec<String>,
         sender: &SenderType,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let cmd_line = args.join(" ");
         match command.as_str() {
             "exec" => {
+                let loc_args = args.join(" ");
+                let cmd_line = html_escape::decode_html_entities(&loc_args);
                 let sender_evt = match sender {
                     SenderType::Group(e) => e,
                     _ => todo!(),
@@ -167,7 +168,8 @@ impl DockerRunnerPlugin {
                     return Err(anyhow!("请输入代码!").into());
                 }
                 let lang_id = &args[0];
-                let code = args[1..].join(" ");
+                let code_joined = args[1..].join(" ");
+                let code = html_escape::decode_html_entities(&code_joined);
                 self.handle_exec(sender, &code, &lang_id).await?;
                 return Ok(());
             }

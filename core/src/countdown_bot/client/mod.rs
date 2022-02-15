@@ -97,18 +97,19 @@ impl CountdownBotClient {
 }
 
 impl CountdownBotClient {
-    pub async fn quick_send(
+    pub async fn quick_send_ex(
         &self,
         evt: &MessageEvent,
         text: &str,
+        auto_escape: bool,
     ) -> Result<ComposedMessageId, Box<dyn std::error::Error>> {
         match evt {
             MessageEvent::Private(evt) => self
-                .send_private_msg(evt.sender.user_id.unwrap(), text, false)
+                .send_private_msg(evt.sender.user_id.unwrap(), text, auto_escape)
                 .await
                 .map(|v| v.into()),
             MessageEvent::Group(evt) => self
-                .send_group_msg(evt.group_id, text, false)
+                .send_group_msg(evt.group_id, text, auto_escape)
                 .await
                 .map(|v| v.into()),
             MessageEvent::Guild(evt) => self
@@ -118,17 +119,18 @@ impl CountdownBotClient {
             MessageEvent::Unknown => Err(Box::from(anyhow::anyhow!("Invalid message event type"))),
         }
     }
-    pub fn quick_send_sync(
+    pub fn quick_send_ex_sync(
         &self,
         evt: &MessageEvent,
         text: &str,
+        auto_escape: bool,
     ) -> Result<ComposedMessageId, Box<dyn std::error::Error>> {
         match evt {
             MessageEvent::Private(evt) => self
-                .send_private_msg_sync(evt.sender.user_id.unwrap(), text, false)
+                .send_private_msg_sync(evt.sender.user_id.unwrap(), text, auto_escape)
                 .map(|v| v.into()),
             MessageEvent::Group(evt) => self
-                .send_group_msg_sync(evt.group_id, text, false)
+                .send_group_msg_sync(evt.group_id, text, auto_escape)
                 .map(|v| v.into()),
             MessageEvent::Guild(evt) => self
                 .send_guild_channel_msg_sync(&evt.guild_id, &evt.channel_id, text)
@@ -136,10 +138,11 @@ impl CountdownBotClient {
             MessageEvent::Unknown => Err(Box::from(anyhow::anyhow!("Invalid message event type"))),
         }
     }
-    pub async fn quick_send_by_sender(
+    pub async fn quick_send_by_sender_ex(
         &self,
         sender: &SenderType,
         text: &str,
+        auto_escape: bool,
     ) -> Result<ComposedMessageId, Box<dyn std::error::Error>> {
         match sender {
             SenderType::Console(_) => {
@@ -147,35 +150,55 @@ impl CountdownBotClient {
                 Ok(MessageIdResp { message_id: -1 }.into())
             }
             SenderType::Private(evt) => {
-                self.quick_send(&MessageEvent::Private(evt.clone()), text)
+                self.quick_send_ex(&MessageEvent::Private(evt.clone()), text, auto_escape)
                     .await
             }
             SenderType::Group(evt) => {
-                self.quick_send(&MessageEvent::Group(evt.clone()), text)
+                self.quick_send_ex(&MessageEvent::Group(evt.clone()), text, auto_escape)
                     .await
             }
             SenderType::Guild(evt) => {
-                self.quick_send(&MessageEvent::Guild(evt.clone()), text)
+                self.quick_send_ex(&MessageEvent::Guild(evt.clone()), text, auto_escape)
                     .await
             }
         }
+    }
+    pub fn quick_send_by_sender_ex_sync(
+        &self,
+        sender: &SenderType,
+        text: &str,
+        auto_escape: bool,
+    ) -> Result<ComposedMessageId, Box<dyn std::error::Error>> {
+        match sender {
+            SenderType::Console(_) => {
+                info!("{}", text);
+                Ok(MessageIdResp { message_id: -1 }.into())
+            }
+            SenderType::Private(evt) => {
+                self.quick_send_ex_sync(&MessageEvent::Private(evt.clone()), text, auto_escape)
+            }
+            SenderType::Group(evt) => {
+                self.quick_send_ex_sync(&MessageEvent::Group(evt.clone()), text, auto_escape)
+            }
+            SenderType::Guild(evt) => {
+                self.quick_send_ex_sync(&MessageEvent::Guild(evt.clone()), text, auto_escape)
+            }
+        }
+    }
+
+    pub async fn quick_send_by_sender(
+        &self,
+        sender: &SenderType,
+        text: &str,
+    ) -> Result<ComposedMessageId, Box<dyn std::error::Error>> {
+        self.quick_send_by_sender_ex(sender, text, false).await
     }
     pub fn quick_send_by_sender_sync(
         &self,
         sender: &SenderType,
         text: &str,
     ) -> Result<ComposedMessageId, Box<dyn std::error::Error>> {
-        match sender {
-            SenderType::Console(_) => {
-                info!("{}", text);
-                Ok(MessageIdResp { message_id: -1 }.into())
-            }
-            SenderType::Private(evt) => {
-                self.quick_send_sync(&MessageEvent::Private(evt.clone()), text)
-            }
-            SenderType::Group(evt) => self.quick_send_sync(&MessageEvent::Group(evt.clone()), text),
-            SenderType::Guild(evt) => self.quick_send_sync(&MessageEvent::Guild(evt.clone()), text),
-        }
+        self.quick_send_by_sender_ex_sync(sender, text, false)
     }
 }
 

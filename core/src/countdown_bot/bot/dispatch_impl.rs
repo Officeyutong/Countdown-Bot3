@@ -5,7 +5,7 @@ use crate::countdown_bot::{
     event::{message::MessageEvent, Event, EventContainer, OOPEventContainer},
 };
 use anyhow::anyhow;
-use log::{error, info, trace};
+use log::{debug, error, info, trace};
 use tokio::sync::RwLock;
 
 use super::CountdownBot;
@@ -19,6 +19,7 @@ impl CountdownBot {
                 MessageEvent::Guild(e) => (e.message.to_string(), SenderType::Guild(e.clone())),
                 MessageEvent::Unknown => return,
             };
+            debug!("Decoded: {}", msg_line);
             let mut ok_for_command = false;
             for prefix in self.config.command_prefix.iter() {
                 if msg_line.starts_with(prefix.as_str()) {
@@ -243,19 +244,19 @@ impl CountdownBot {
                 SenderType::Console(_) => error!("{}", s),
                 SenderType::Private(evt) => {
                     client
-                        .quick_send(&MessageEvent::Private(evt.clone()), &s)
+                        .quick_send_ex(&MessageEvent::Private(evt.clone()), &s, false)
                         .await
                         .ok();
                 }
                 SenderType::Group(evt) => {
                     client
-                        .quick_send(&MessageEvent::Group(evt.clone()), &s)
+                        .quick_send_ex(&MessageEvent::Group(evt.clone()), &s, false)
                         .await
                         .ok();
                 }
                 SenderType::Guild(evt) => {
                     client
-                        .quick_send(&MessageEvent::Guild(evt.clone()), &s)
+                        .quick_send_ex(&MessageEvent::Guild(evt.clone()), &s, false)
                         .await
                         .ok();
                 }

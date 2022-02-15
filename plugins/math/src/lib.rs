@@ -10,6 +10,7 @@ use countdown_bot3::{
     },
     export_static_plugin,
 };
+use html_escape::decode_html_entities;
 use log::debug;
 
 static PLUGIN_NAME: &str = "math";
@@ -125,6 +126,10 @@ impl MathPlugin {
         sender: &SenderType,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let mut image_only = false;
+        let args = args
+            .iter()
+            .map(|s| decode_html_entities(s).to_string())
+            .collect::<Vec<String>>();
         let execute_result = match command.as_str() {
             "solve" => self.command_solve(args).await?,
             "factor" => self.command_factor(args).await?,
