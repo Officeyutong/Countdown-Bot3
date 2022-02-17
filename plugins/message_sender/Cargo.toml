@@ -1,0 +1,17 @@
+[package]
+name = "message_sender"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+countdown-bot3 = { path = "../../core" }
+async-trait = "0.1.52"
+tokio = { version = "1.15.0", features = ["sync"] }
+log = "0.4.14"
+flexi_logger = "0.22.0"
+anyhow = "1.0.52"
+serde = "1.0.132"
+clap = "3.0.14"
+html-escape = "0.2.9"

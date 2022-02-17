@@ -53,7 +53,7 @@ impl CountdownBotClient {
     declare_api_call!(get_csrf_token, GetCredentialsResp,);
     declare_api_call!(get_credentials, GetCredentialsResp,);
     declare_api_call!(get_record, SingleFileResp, (file, &str), (out_format, &str));
-    declare_api_call!(get_image, SingleFileResp, (file, &str));
+    // declare_api_call!(get_image, SingleFileResp, (file, &str));
     declare_api_call!(can_send_image, SingleBoolResp,);
     declare_api_call!(can_send_record, SingleBoolResp,);
     pub async fn get_status(&self) -> ResultType<BotStatus> {

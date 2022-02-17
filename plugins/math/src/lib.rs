@@ -155,9 +155,10 @@ impl MathPlugin {
             self.client
                 .as_ref()
                 .unwrap()
-                .quick_send_by_sender(
+                .quick_send_by_sender_ex(
                     sender,
                     &format!("[CQ:image,file=base64://{}]", execute_result.image),
+                    false
                 )
                 .await?;
         } else {
@@ -169,7 +170,11 @@ impl MathPlugin {
             self.client
                 .as_ref()
                 .unwrap()
-                .quick_send_by_sender(sender, &format!("程序标准错误:\n{}", execute_result.error))
+                .quick_send_by_sender_ex(
+                    sender,
+                    &format!("程序标准错误:\n{}", execute_result.error),
+                    true,
+                )
                 .await?;
         }
         return Ok(());

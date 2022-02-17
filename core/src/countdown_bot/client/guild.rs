@@ -1,9 +1,9 @@
 use serde::Deserialize;
-use serde_json::Value;
+use serde_json::{json, Value};
 
-use crate::declare_api_call;
+use crate::{countdown_bot::message::wrapper::Message, declare_api_call};
 
-use super::{message::ComposedMessageId, CountdownBotClient};
+use super::{message::ComposedMessageId, CountdownBotClient, ResultType};
 #[derive(Deserialize)]
 pub struct GuildServiceProfileResponse {
     pub nickname: String,
@@ -163,4 +163,32 @@ impl CountdownBotClient {
         (guild_id, &str),
         (channel_id, &str)
     );
+    pub async fn msgseg_send_guild_msg(
+        &self,
+        guild_id: &str,
+        channel_id: &str,
+        message: &Message,
+    ) -> ResultType<ChannelMessageIdResp> {
+        match message {
+            Message::Text(t) => {
+                return Ok(self
+                    .send_guild_channel_msg(guild_id, channel_id, &t)
+                    .await?)
+            }
+            Message::Segment(seg) => {
+                let json_val = serde_json::to_value(seg)?;
+                return Ok(serde_json::from_value(
+                    self.call(
+                        "send_guild_channel_msg",
+                        &json!({
+                            "guild_id":guild_id,
+                            "channel_id":channel_id,
+                            "message":json_val
+                        }),
+                    )
+                    .await?,
+                )?);
+            }
+        };
+    }
 }

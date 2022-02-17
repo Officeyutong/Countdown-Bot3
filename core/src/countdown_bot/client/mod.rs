@@ -4,7 +4,7 @@ use serde::{de::DeserializeOwned, Deserialize};
 use serde_json::Value;
 use tokio::sync::{mpsc, oneshot};
 
-use super::{command::SenderType, event::message::MessageEvent};
+use super::{command::SenderType, event::message::MessageEvent, message::wrapper::Message};
 
 pub type RequestReceiver = mpsc::UnboundedReceiver<APICallRequest>;
 pub type RequestSender = mpsc::UnboundedSender<APICallRequest>;
@@ -191,21 +191,47 @@ impl CountdownBotClient {
         sender: &SenderType,
         text: &str,
     ) -> Result<ComposedMessageId, Box<dyn std::error::Error>> {
-        self.quick_send_by_sender_ex(sender, text, false).await
+        self.quick_send_by_sender_ex(sender, text, true).await
     }
     pub fn quick_send_by_sender_sync(
         &self,
         sender: &SenderType,
         text: &str,
     ) -> Result<ComposedMessageId, Box<dyn std::error::Error>> {
-        self.quick_send_by_sender_ex_sync(sender, text, false)
+        self.quick_send_by_sender_ex_sync(sender, text, true)
     }
 }
-
+impl CountdownBotClient {
+    pub async fn msgseg_quicksend(
+        &self,
+        sender: &SenderType,
+        message: &Message,
+    ) -> ResultType<ComposedMessageId> {
+        match sender {
+            SenderType::Console(_) => {
+                info!("{}", message.to_string());
+                Ok(MessageIdResp { message_id: -1 }.into())
+            }
+            SenderType::Private(p) => self
+                .msgseg_send_private_msg(p.user_id, message)
+                .await
+                .map(|v| v.into()),
+            SenderType::Group(e) => self
+                .msgseg_send_group_msg(e.group_id, message)
+                .await
+                .map(|v| v.into()),
+            SenderType::Guild(e) => self
+                .msgseg_send_guild_msg(&e.guild_id, &e.channel_id, message)
+                .await
+                .map(Into::into),
+        }
+    }
+}
 pub mod group;
 pub mod guild;
 pub mod message;
 pub mod misc;
+pub mod extra_go_cqhttp;
 #[macro_export]
 macro_rules! declare_api_call {
     ($name:ident,$ret:ty, $(($x:ident,$y:ty)),*) => {

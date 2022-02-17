@@ -157,9 +157,10 @@ impl CountdownBot {
                                 .await;
                             if let Err(e) = call_result {
                                 self.create_client()
-                                    .quick_send_by_sender(
+                                    .quick_send_by_sender_ex(
                                         &parsed_sender,
                                         format!("执行指令时发生错误:\n{}", e).as_str(),
+                                        true
                                     )
                                     .await
                                     .ok();

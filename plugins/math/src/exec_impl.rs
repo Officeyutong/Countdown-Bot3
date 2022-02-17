@@ -6,6 +6,10 @@ use bollard::{
 use countdown_bot3::countdown_bot::{
     client::{CountdownBotClient, ResultType},
     command::SenderType,
+    message::{
+        segment::{ImageData, MessageSegment, TextData},
+        wrapper::Message,
+    },
 };
 use futures_util::{sink, stream::StreamExt};
 use log::info;
@@ -34,19 +38,27 @@ impl ExecuteResult {
         client: &CountdownBotClient,
     ) -> ResultType<()> {
         client
-            .quick_send_by_sender(
+            .msgseg_quicksend(
                 sender,
-                &format!(
-                    r###"Python表达式:
+                &Message::Segment(vec![
+                    MessageSegment::Text(TextData {
+                        text: format!(
+                            r###"Python表达式:
 {}
-        
+    
 LaTeX:
 {}
-        
+    
 图像:
-[CQ:image,file=base64://{}]"###,
-                    self.python_expr, self.latex, self.image
-                ),
+"###,
+                            self.python_expr, self.latex
+                        ),
+                    }),
+                    MessageSegment::Image(ImageData {
+                        file: format!("base64://{}", self.image),
+                        ..Default::default()
+                    }),
+                ]),
             )
             .await?;
         return Ok(());

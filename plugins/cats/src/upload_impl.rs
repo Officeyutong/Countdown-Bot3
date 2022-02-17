@@ -14,7 +14,7 @@ impl CatsPlugin {
     ) -> ResultType<()> {
         lazy_static! {
             static ref EXPR_IMAGE: Regex =
-                Regex::new(r"\[CQ:image.+url=(?P<url>[^\[^\]]+)").unwrap();
+                Regex::new(r"\[CQ:image.+file=(?P<file>.+),").unwrap();
         }
         let config = self.config.as_ref().unwrap();
         let as_qq = args
@@ -28,8 +28,16 @@ impl CatsPlugin {
         debug!("image: {}", image_data);
         let captures = EXPR_IMAGE
             .captures(image_data)
-            .ok_or(anyhow!("没有在上传的图片中找到URL!"))?;
-        let url = captures.name("url").unwrap().as_str();
+            .ok_or(anyhow!("没有在上传的图片中找到FILE段!"))?;
+        let file = captures.name("file").unwrap().as_str();
+        let url = self
+            .client
+            .as_ref()
+            .unwrap()
+            .get_image(file)
+            .await
+            .map_err(|e| anyhow!("获取图片下载链接时发生错误:\n{}", e))?
+            .url;
         let image_bytes = reqwest::get(url)
             .await
             .map_err(|e| anyhow!("下载图片时发生错误: {}", e))?

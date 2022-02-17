@@ -1,9 +1,13 @@
 use std::fmt::Display;
 
-use crate::{countdown_bot::event::message::GroupMessageSender, declare_api_call};
+use crate::{
+    countdown_bot::{event::message::GroupMessageSender, message::wrapper::Message},
+    declare_api_call,
+};
 
 use super::{CountdownBotClient, ResultType};
 use serde::Deserialize;
+use serde_json::json;
 
 #[derive(Deserialize, Debug)]
 pub struct MessageIdResp {
@@ -60,7 +64,48 @@ impl CountdownBotClient {
         (auto_escape, bool)
     );
     declare_api_call!(delete_message, (), (message_id, i64));
-    pub async fn get_forward_message(&self, _id: &str) -> ResultType<MessageInfoResp> {
-        todo!();
+    pub async fn msgseg_send_private_msg(
+        &self,
+        uid: i64,
+        message: &Message,
+    ) -> ResultType<MessageIdResp> {
+        match message {
+            Message::Text(t) => return Ok(self.send_private_msg(uid, &t, false).await?),
+            Message::Segment(seg) => {
+                let json_val = serde_json::to_value(seg)?;
+                return Ok(serde_json::from_value(
+                    self.call(
+                        "send_private_msg",
+                        &json!({
+                            "user_id":uid,
+                            "message":json_val,
+                        }),
+                    )
+                    .await?,
+                )?);
+            }
+        };
+    }
+    pub async fn msgseg_send_group_msg(
+        &self,
+        gid: i64,
+        message: &Message,
+    ) -> ResultType<MessageIdResp> {
+        match message {
+            Message::Text(t) => return Ok(self.send_group_msg(gid, &t, false).await?),
+            Message::Segment(seg) => {
+                let json_val = serde_json::to_value(seg)?;
+                return Ok(serde_json::from_value(
+                    self.call(
+                        "send_group_msg",
+                        &json!({
+                            "group_id":gid,
+                            "message":json_val,
+                        }),
+                    )
+                    .await?,
+                )?);
+            }
+        };
     }
 }

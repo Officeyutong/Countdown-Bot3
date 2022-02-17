@@ -147,13 +147,14 @@ impl JiugePlugin {
             let parsed = serde_json::from_str::<Resp>(&text_resp)?;
             info!("Image generating response: {:?}", parsed);
             client
-                .quick_send_by_sender(
+                .quick_send_by_sender_ex(
                     &sender,
                     format!(
                         "[CQ:image,file=http://jiuge.thunlp.org/share/new/{}]",
                         parsed.data
                     )
                     .as_str(),
+                    false
                 )
                 .await?;
         }

@@ -74,7 +74,7 @@ impl CatsPlugin {
         self.client
             .as_ref()
             .unwrap()
-            .quick_send_by_sender(
+            .quick_send_by_sender_ex(
                 sender,
                 format!(
                     "来自 {} 的猫片 ID:{} {}\n[CQ:image,file=base64://{}]",
@@ -84,6 +84,7 @@ impl CatsPlugin {
                     b64enc
                 )
                 .as_str(),
+                false
             )
             .await?;
         return Ok(());

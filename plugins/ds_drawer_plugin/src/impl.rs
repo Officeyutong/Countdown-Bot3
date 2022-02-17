@@ -50,9 +50,10 @@ impl DSDrawerPlugin {
                     self.client
                         .clone()
                         .unwrap()
-                        .quick_send_by_sender(
+                        .quick_send_by_sender_ex(
                             sender,
                             format!("[CQ:image,file=base64://{}]", b64enc).as_str(),
+                            false
                         )
                         .await?;
                     return Ok(());
