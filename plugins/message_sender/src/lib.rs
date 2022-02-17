@@ -149,13 +149,19 @@ impl MessageSenderPlugin {
         }
         let send_groups = args.values_of("group").map(|v| v.collect::<Vec<&str>>());
         let send_users = args.values_of("user").map(|v| v.collect::<Vec<&str>>());
-        let message = html_escape::decode_html_entities(&args
-            .values_of("message")
-            .map(|v| v.collect::<Vec<&str>>().join(" "))
-            .ok_or(anyhow!("请输入消息!"))?).to_string();
+        let message = html_escape::decode_html_entities(
+            &args
+                .values_of("message")
+                .map(|v| v.collect::<Vec<&str>>().join(" "))
+                .ok_or(anyhow!("请输入消息!"))?,
+        )
+        .to_string();
+        info!("Sending message: {}", message);
         let client = self.client.as_ref().unwrap();
         if send_groups.is_none() && send_users.is_none() {
-            client.quick_send_by_sender(sender, &message).await?;
+            client
+                .quick_send_by_sender_ex(sender, &message, false)
+                .await?;
         }
         if let Some(users) = send_users {
             for user in users {
