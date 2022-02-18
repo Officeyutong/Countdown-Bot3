@@ -85,7 +85,7 @@ impl SignInPlugin {
         self.client
             .as_ref()
             .unwrap()
-            .quick_send_by_sender(sender, &buf)
+            .quick_send_by_sender_ex(sender, &buf, false)
             .await?;
         return Ok(());
     }

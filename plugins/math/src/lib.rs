@@ -158,7 +158,7 @@ impl MathPlugin {
                 .quick_send_by_sender_ex(
                     sender,
                     &format!("[CQ:image,file=base64://{}]", execute_result.image),
-                    false
+                    false,
                 )
                 .await?;
         } else {

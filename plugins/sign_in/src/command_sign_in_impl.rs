@@ -44,7 +44,7 @@ impl SignInPlugin {
                 "本月签到次数: {}\n累计群签到次数: {}",
                 month_times, all_times
             ));
-            client.quick_send_by_sender(sender, &buf).await?;
+            client.quick_send_by_sender_ex(sender, &buf, false).await?;
             return Ok(());
         }
         let mut sign_in_data = SignInData::new(group_id, user_id);
@@ -84,7 +84,7 @@ impl SignInPlugin {
             month_times, all_times
         ));
 
-        client.quick_send_by_sender(sender, &buf).await?;
+        client.quick_send_by_sender_ex(sender, &buf, false).await?;
         return Ok(());
     }
 }

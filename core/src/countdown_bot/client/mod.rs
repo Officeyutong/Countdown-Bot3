@@ -227,11 +227,11 @@ impl CountdownBotClient {
         }
     }
 }
+pub mod extra_go_cqhttp;
 pub mod group;
 pub mod guild;
 pub mod message;
 pub mod misc;
-pub mod extra_go_cqhttp;
 #[macro_export]
 macro_rules! declare_api_call {
     ($name:ident,$ret:ty, $(($x:ident,$y:ty)),*) => {

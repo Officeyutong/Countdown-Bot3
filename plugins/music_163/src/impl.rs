@@ -89,9 +89,10 @@ impl Music163Plugin {
         }
         if send_share {
             bot_client
-                .quick_send_by_sender(
+                .quick_send_by_sender_ex(
                     sender,
                     format!("[CQ:music,type=163,id={}]", music_id).as_str(),
+                    false,
                 )
                 .await?;
         }
@@ -123,9 +124,10 @@ impl Music163Plugin {
                     .await
                     .ok();
                 bot_client
-                    .quick_send_by_sender(
+                    .quick_send_by_sender_ex(
                         &sender,
                         format!("[CQ:record,file={}]", music_url).as_str(),
+                        false,
                     )
                     .await
                     .ok();

@@ -160,7 +160,7 @@ impl CountdownBot {
                                     .quick_send_by_sender_ex(
                                         &parsed_sender,
                                         format!("执行指令时发生错误:\n{}", e).as_str(),
-                                        true
+                                        true,
                                     )
                                     .await
                                     .ok();

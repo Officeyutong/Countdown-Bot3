@@ -126,7 +126,14 @@ impl EventListener for MyEventHandler {
         let client = casted.client.as_ref().unwrap();
         let gid = gevt.group_id;
         if !config.blacklist_groups.contains(&gid) {
-            handle_repeat(&mut casted.repeat_data, gid, client, &gevt.raw_message, config).await?;
+            handle_repeat(
+                &mut casted.repeat_data,
+                gid,
+                client,
+                &gevt.raw_message,
+                config,
+            )
+            .await?;
         }
         return Ok(());
     }

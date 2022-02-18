@@ -176,9 +176,10 @@ impl ReadPlugin {
         self.client
             .as_ref()
             .unwrap()
-            .quick_send_by_sender(
+            .quick_send_by_sender_ex(
                 sender,
                 &format!("[CQ:record,file=base64://{}]", base64::encode(record_bytes)),
+                false,
             )
             .await?;
         return Ok(());

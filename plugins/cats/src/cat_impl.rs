@@ -84,7 +84,7 @@ impl CatsPlugin {
                     b64enc
                 )
                 .as_str(),
-                false
+                false,
             )
             .await?;
         return Ok(());

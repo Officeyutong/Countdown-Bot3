@@ -13,8 +13,7 @@ impl CatsPlugin {
         args: ArgMatches<'_>,
     ) -> ResultType<()> {
         lazy_static! {
-            static ref EXPR_IMAGE: Regex =
-                Regex::new(r"\[CQ:image.+file=(?P<file>.+),").unwrap();
+            static ref EXPR_IMAGE: Regex = Regex::new(r"\[CQ:image.+file=(?P<file>.+),").unwrap();
         }
         let config = self.config.as_ref().unwrap();
         let as_qq = args

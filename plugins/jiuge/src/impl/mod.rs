@@ -154,7 +154,7 @@ impl JiugePlugin {
                         parsed.data
                     )
                     .as_str(),
-                    false
+                    false,
                 )
                 .await?;
         }
