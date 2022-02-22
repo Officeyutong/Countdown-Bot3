@@ -21,7 +21,7 @@ jobs:
     - name: Build
       run: cargo build --release
     - name: Compress the output
-      uses: crazy-max/ghaction-upx@1.4.0
+      uses: crazy-max/ghaction-upx@v1.4.0
       with:
         args: "--ultra-brute"
         file: "target/release/app"
@@ -38,7 +38,7 @@ jobs:
     - name: Build
       run: cargo build --release
     - name: Compress the output
-      uses: crazy-max/ghaction-upx@1.4.0
+      uses: crazy-max/ghaction-upx@v1.4.0
       with:
         args: "--ultra-brute"
         file: "target/release/app.exe"
@@ -54,7 +54,7 @@ jobs:
     - name: Build
       run: cargo build --release
     - name: Compress the output
-      uses: crazy-max/ghaction-upx@1.4.0
+      uses: crazy-max/ghaction-upx@v1.4.0
       with:
         args: "--ultra-brute"
         file: "target/release/app"
