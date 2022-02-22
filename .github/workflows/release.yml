@@ -20,17 +20,28 @@ jobs:
       run: sudo apt install libssl-dev
     - name: Build
       run: cargo build --release
+    - name: Compress the output
+      uses: crazy-max/ghaction-upx@1.4.0
+      with:
+        args: "--ultra-brute"
+        file: "target/release/app"
     - name: Upload
       uses: actions/upload-artifact@v2.3.1
       with:
         name: "ubuntu-x86_64"
         path: "target/release/app"
+    
   "build-windows-x64":
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
     - name: Build
       run: cargo build --release
+    - name: Compress the output
+      uses: crazy-max/ghaction-upx@1.4.0
+      with:
+        args: "--ultra-brute"
+        file: "target/release/app.exe"
     - name: Upload
       uses: actions/upload-artifact@v2.3.1
       with:
@@ -42,6 +53,11 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build
       run: cargo build --release
+    - name: Compress the output
+      uses: crazy-max/ghaction-upx@1.4.0
+      with:
+        args: "--ultra-brute"
+        file: "target/release/app"
     - name: Upload
       uses: actions/upload-artifact@v2.3.1
       with:
