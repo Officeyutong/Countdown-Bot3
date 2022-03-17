@@ -280,7 +280,7 @@ class Game:
                 pass
                 # import traceback
                 # traceback.print_exc()
-        self.last_play_message_id = result["message_id"]
+        self.last_play_message_id = result
         self.bot.logger.debug(
             f"Last play message ID: {self.last_play_message_id}")
         if not self.non_played:
@@ -314,7 +314,7 @@ class Game:
                 self.get_profile(player), player)
         selected_item = random.choice(
             self.plugin.load_data()["problem_set"][problem_set]["rules"])
-        self.bot.logger.info(selected_item)
+        self.bot.logger.info(f"{selected_item}")
         msg += "处罚内容为:\n"
         if selected_item["type"] == "simple":
             msg += selected_item["content"]+"\n"
