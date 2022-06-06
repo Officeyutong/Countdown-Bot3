@@ -58,15 +58,18 @@ impl Music163Plugin {
             .ok_or(anyhow!("请输入查询关键字!"))?
             .collect::<Vec<&str>>()
             .join(" ");
-        let flags = [send_record, send_share, send_url];
-        let mut true_count = 0;
-        for x in flags {
-            true_count += if x { 1 } else { 0 };
-        }
-        if true_count == 0 {
+        // let flags = [send_record, send_share, send_url];
+        // let mut true_count = 0;
+        // for x in flags {
+        //     true_count += if x { 1 } else { 0 };
+        // }
+        // if true_count == 0 {
+        //     send_record = true;
+        // } else if true_count > 1 {
+        //     return Err(anyhow!("record,url,share三者只能选其一!").into());
+        // }
+        if send_record || send_url || send_share == false {
             send_record = true;
-        } else if true_count > 1 {
-            return Err(anyhow!("record,url,share三者只能选其一!").into());
         }
         if !self.check_login_status().await? {
             self.try_to_login().await?;
@@ -87,6 +90,7 @@ impl Music163Plugin {
         if !self.check_music_exists(music_id).await? {
             return Err(anyhow!("所请求的音乐ID不存在!").into());
         }
+        let detail = self.get_music_detail(music_id).await?;
         if send_share {
             bot_client
                 .quick_send_by_sender_ex(
@@ -95,19 +99,21 @@ impl Music163Plugin {
                     false,
                 )
                 .await?;
+        } else {
+            bot_client
+                .quick_send_by_sender(
+                    sender,
+                    format!("发送歌曲中: {}", detail.make_song_string()).as_str(),
+                )
+                .await?;
         }
-        let detail = self.get_music_detail(music_id).await?;
+        
         let music_url = self
             .get_music_url(music_id)
             .await
             .map_err(|e| anyhow!("获取音乐下载链接时失败! :{}", e))?;
         info!("Music url: {}", music_url);
-        bot_client
-            .quick_send_by_sender(
-                sender,
-                format!("发送歌曲中: {}", detail.make_song_string()).as_str(),
-            )
-            .await?;
+
         if send_url {
             bot_client
                 .quick_send_by_sender(sender, music_url.as_str())
