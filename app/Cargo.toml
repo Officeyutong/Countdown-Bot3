@@ -33,3 +33,4 @@ music_gen = { path = "../plugins/music_gen" }
 read = { path = "../plugins/read" }
 zxhdmx = { path = "../plugins/zxhdmx" }
 message_sender = { path = "../plugins/message_sender" }
+genshin_saying = { path = "../plugins/genshin_saying" }

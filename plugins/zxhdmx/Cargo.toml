@@ -14,8 +14,8 @@ flexi_logger = "0.22.0"
 anyhow = "1.0.52"
 serde = "1.0.132"
 serde_json = "1.0.73"
-rustpython-vm = { git = "https://github.com/RustPython/RustPython", features = ["freeze-stdlib"], rev = "bd295e0f" }
-rustpython-stdlib = { git = "https://github.com/RustPython/RustPython", rev = "bd295e0f" }
+rustpython-vm = { git = "https://github.com/RustPython/RustPython", features = ["freeze-stdlib"], rev = "49016b6a94e3c57bc6e26458f72fcb67191f7da4" }
+rustpython-stdlib = { git = "https://github.com/RustPython/RustPython", rev = "49016b6a94e3c57bc6e26458f72fcb67191f7da4" }
 futures = "0.3.19"
 num-bigint = "0.4.3"
 salvo = "0.16.8"

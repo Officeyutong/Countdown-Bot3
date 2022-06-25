@@ -30,7 +30,7 @@ use pytypes::{
 };
 use pyvm::{
     builtins::{PyBaseExceptionRef, PyModule},
-    PyClassImpl, PyObjectRef, PyRef, PySettings,
+    PyObjectRef, PyRef, PySettings, PyClassImpl,
 };
 use rustpython_vm as pyvm;
 use serde_json::Value;

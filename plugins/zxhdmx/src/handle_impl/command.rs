@@ -1,12 +1,3 @@
-use countdown_bot3::countdown_bot::client::{CountdownBotClient, ResultType};
-use log::debug;
-use pyvm::{
-    builtins::{PyInt, PyModule, PyStr},
-    function::{FuncArgs, IntoPyObject, KwArgs, PosArgs},
-    PyMethod, PyRef, PyValue,
-};
-use rustpython_vm as pyvm;
-
 use crate::{
     config::ZxhdmxConfig,
     pytypes::{
@@ -16,6 +7,14 @@ use crate::{
     utils::{check_player_in_game, transform_pyerr},
     DataType, GameObjectType, InprType,
 };
+use countdown_bot3::countdown_bot::client::{CountdownBotClient, ResultType};
+use log::debug;
+use pyvm::{
+    builtins::{PyInt, PyModule},
+    function::{FuncArgs, KwArgs, PosArgs, IntoPyObject},
+    PyValue, PyRef,
+};
+use rustpython_vm as pyvm;
 pub fn handle_command(
     user_id: i64,
     group_id: i64,
@@ -36,9 +35,12 @@ pub fn handle_command(
             .unwrap()
             .enter(|vm| {
                 let game_class = game_module.get_attr("Game", vm)?;
-                let call_method =
-                    PyMethod::get(game_class, PyStr::from("__call__").into_ref(vm), vm)?;
-                let obj = call_method.invoke(
+                // vm.call_method(obj, method_name, args)
+                // let call_method =
+                //     PyMethod::get(game_class, PyStr::from("__call__").into_ref(vm), vm)?;
+                let obj = vm.call_method(
+                    &game_class,
+                    "__call__",
                     FuncArgs::new(
                         PosArgs::new(vec![
                             WrappedCountdownBot::new((MyPyLogger {}).into_ref(vm), client.clone())
@@ -52,7 +54,6 @@ pub fn handle_command(
                         ]),
                         KwArgs::default(),
                     ),
-                    vm,
                 )?;
                 return Ok(obj);
             })
@@ -68,13 +69,18 @@ pub fn handle_command(
     };
     py_inpr
         .enter(|vm| {
-            PyMethod::get(game_inst, PyStr::from(method_name).into_ref(vm), vm)?.invoke(
+            vm.call_method(
+                &game_inst,
+                method_name,
                 FuncArgs::new(
                     PosArgs::new(vec![PyInt::from(user_id).into_pyobject(vm)]),
                     KwArgs::default(),
                 ),
-                vm,
             )
+            // PyMethod::get(game_inst, PyStr::from(method_name).into_ref(vm), vm)?.invoke(
+            //    ,
+            //     vm,
+            // )
         })
         .map_err(transform_pyerr)?;
     return Ok(());

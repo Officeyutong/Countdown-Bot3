@@ -7,8 +7,8 @@ use anyhow::anyhow;
 use countdown_bot3::countdown_bot::client::{CountdownBotClient, ResultType};
 use pyvm::{
     builtins::{PyInt, PyStr},
-    function::{FuncArgs, IntoPyObject, KwArgs},
-    PyMethod, PyObjectRef, PyRef, PyValue, VirtualMachine,
+    function::{FuncArgs, KwArgs, IntoPyObject},
+    PyObjectRef, PyValue, PyRef, VirtualMachine,
 };
 use rustpython_vm as pyvm;
 pub fn handle_event(
@@ -154,9 +154,8 @@ fn quick_call<T>(
 where
     T: PyValue,
 {
-    return PyMethod::get(obj, PyStr::from(func_name).into_ref(vm), vm)
-        .map_err(transform_pyerr)?
-        .invoke(FuncArgs::new(args, KwArgs::default()), vm)
+    return vm
+        .call_method(&obj, func_name, FuncArgs::new(args, KwArgs::default()))
         .map_err(transform_pyerr)?
         .downcast::<T>()
         .map_err(|_| anyhow!("Failed to perform type cast!"));
@@ -167,9 +166,8 @@ fn quick_call_no_ret(
     vm: &VirtualMachine,
     args: Vec<PyObjectRef>,
 ) -> anyhow::Result<()> {
-    return PyMethod::get(obj, PyStr::from(func_name).into_ref(vm), vm)
-        .map_err(transform_pyerr)?
-        .invoke(FuncArgs::new(args, KwArgs::default()), vm)
+    return vm
+        .call_method(&obj, func_name, FuncArgs::new(args, KwArgs::default()))
         .map_err(transform_pyerr)
         .map(|_| ());
 }

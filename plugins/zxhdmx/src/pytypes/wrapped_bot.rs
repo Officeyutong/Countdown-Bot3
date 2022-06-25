@@ -2,8 +2,8 @@ use countdown_bot3::countdown_bot::client::CountdownBotClient;
 use log::{debug, info};
 use pyvm::{
     builtins::{PyDict, PyDictRef, PyInt, PyIntRef, PyStr, PyStrRef},
-    function::{IntoPyObject, KwArgs},
-    pyclass, pyimpl, IntoPyRef, PyRef, PyResult, PyValue, VirtualMachine,
+    function::{KwArgs, IntoPyObject},
+    pyclass, pyimpl, PyValue, PyRef, PyResult, VirtualMachine, IntoPyRef,
 };
 use rustpython_vm as pyvm;
 use std::fmt::Debug;

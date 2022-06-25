@@ -1,0 +1,21 @@
+[package]
+name = "genshin_saying"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+countdown-bot3 = { path = "../../core" }
+async-trait = "0.1.52"
+# serde = "1.0.132"
+# reqwest = { version = "0.11.8"}
+# serde_json = "1.0.73"
+tokio = "1.15.0"
+# chrono = "0.4.19"
+log = "0.4.14"
+flexi_logger = "0.22.0"
+anyhow = "1.0.52"
+serde = "1.0.132"
+strfmt = "0.1.6"
+jieba-rs = "0.6.6"

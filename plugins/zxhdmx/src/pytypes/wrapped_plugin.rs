@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use pyvm::{
     builtins::{PyDict, PyDictRef, PyFunction, PyInt, PyIntRef, PyStr},
-    function::{FuncArgs, IntoPyObject, KwArgs, PosArgs},
-    pyclass, pyimpl, PyObjectRef, PyRef, PyResult, PyValue, VirtualMachine,
+    function::{FuncArgs, KwArgs, PosArgs, IntoPyObject},
+    pyclass, pyimpl, PyObjectRef, PyValue, PyRef, PyResult, VirtualMachine,
 };
 use rustpython_vm as pyvm;
 use serde::{de::DeserializeOwned, Deserialize};

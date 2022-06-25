@@ -31,6 +31,7 @@ async fn main() {
     bot.add_plugin_static_register_hook(read::plugin_register);
     bot.add_plugin_static_register_hook(zxhdmx::plugin_register);
     bot.add_plugin_static_register_hook(message_sender::plugin_register);
+    bot.add_plugin_static_register_hook(genshin_saying::plugin_register);
 
     bot.init().await.expect("Failed to initialize bot.");
     bot.run().await.unwrap();
