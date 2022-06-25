@@ -1,66 +1,59 @@
-name: Rust
+name: Build binary
 
 on:
   push:
-    branches: [ master ]
+    tags:
+      - v**
   pull_request:
-    branches: [ master ]
-
-env:
-  CARGO_TERM_COLOR: always
 
 jobs:
-  "build-ubuntu-x64":
-    runs-on: ubuntu-latest
+  build:
+    strategy:
+      fail-fast: true
+      matrix:
+        job:
+          - { os: macos-latest }
+          - { os: ubuntu-latest }
+          - { os: windows-latest }
+
+
+    name: Build
+    runs-on: ${{ matrix.job.os }}
     steps:
-    - uses: actions/checkout@v2
-    - name: Install sqlite
-      run: sudo apt install libsqlite3-dev
-    - name: Install libssl
-      run: sudo apt install libssl-dev
-    - name: Build
-      run: cargo build --release
-#     - name: Compress the output
-#       uses: crazy-max/ghaction-upx@v1.4.0
-#       with:
-#         args: "--ultra-brute"
-#         file: "target/release/app"
-    - name: Upload
-      uses: actions/upload-artifact@v2.3.1
-      with:
-        name: "ubuntu-x86_64"
-        path: "target/release/app"
-    
-  "build-windows-x64":
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Build
-      run: cargo build --release
-    - name: Compress the output
-      uses: crazy-max/ghaction-upx@v1.4.0
-      with:
-        args: "--ultra-brute"
-        files: |
-          "target/release/app.exe"
-    - name: Upload
-      uses: actions/upload-artifact@v2.3.1
-      with:
-        name: "windows-x86_64"
-        path: "target/release/app.exe"
-  "build-macos-x64":
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Build
-      run: cargo build --release
-#     - name: Compress the output
-#       uses: crazy-max/ghaction-upx@v1.4.0
-#       with:
-#         args: "--ultra-brute"
-#         file: "target/release/app"
-    - name: Upload
-      uses: actions/upload-artifact@v2.3.1
-      with:
-        name: "macos-x86_64"
-        path: "target/release/app"
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+      - name: Rename binary
+        id: rename
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            BIN='countdown_bot3_linux_amd64'
+            mv target/release/app target/release/$BIN
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            BIN='countdown_bot3_darwin_amd64'
+            mv target/release/app target/release/$BIN
+          else
+            BIN='countdown_bot3_windows_amd64.exe'
+            mv target/release/app.exe target/release/$BIN
+          fi
+          echo "::set-output name=bin::target/release/$BIN"
+      - uses: actions/upload-artifact@v2
+        with:
+          name: artifact
+          path: |
+            target/release/countdown_bot3*
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ${{ steps.rename.outputs.bin }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
