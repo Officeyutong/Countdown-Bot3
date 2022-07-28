@@ -10,7 +10,10 @@ use countdown_bot3::{
     initialize_plugin_logger,
     // initialize_plugin_logger,
 };
-use rand::{prelude::StdRng, SeedableRng};
+use rand::{
+    prelude::{SliceRandom, StdRng},
+    SeedableRng,
+};
 use serde::{Deserialize, Serialize};
 use std::{path::PathBuf, str::FromStr};
 #[derive(Deserialize, Serialize, Debug)]
@@ -58,6 +61,15 @@ impl BotPlugin for SimpleRandPlugin {
                 .guild(true)
                 .single_alias("随机"),
         )?;
+        bot.register_command(
+            Command::new("choice")
+                .description("随机选择 | choice <选项1> [选项2 [选项3 [...]]]")
+                .console(true)
+                .group(true)
+                .private(true)
+                .guild(true)
+                .single_alias("随机选择"),
+        )?;
         self.config = Some(load_config_or_save_default::<SimpleRandConfig>(
             &self.plugin_data_root.as_ref().unwrap(),
         )?);
@@ -80,8 +92,46 @@ impl BotPlugin for SimpleRandPlugin {
     }
     async fn on_command(
         &mut self,
-        _command: String,
+        command: String,
         args: Vec<String>,
+        sender: &SenderType,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        match command.as_str() {
+            "rand" => self.handle_rand(&args, sender).await?,
+            "choice" => self.handle_choice(&args, sender).await?,
+            _ => {}
+        };
+        return Ok(());
+    }
+}
+
+countdown_bot3::export_static_plugin!(PLUGIN_NAME, SimpleRandPlugin::new());
+
+impl SimpleRandPlugin {
+    async fn handle_choice(
+        &self,
+        args: &Vec<String>,
+        sender: &SenderType,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        if args.len() < 1 {
+            return Err(anyhow!("请输入最少一个选项！").into());
+        }
+        let max_count = self.config.as_ref().unwrap().max_number_count;
+        if args.len() > max_count as usize {
+            return Err(anyhow!("最多允许 {} 个随机选项！", max_count).into());
+        }
+        let mut rng: StdRng = SeedableRng::from_entropy();
+        let elem = args.choose(&mut rng).unwrap();
+        self.client
+            .as_ref()
+            .unwrap()
+            .quick_send_by_sender(&sender, format!("你的选择结果是：\n{}", elem).as_str())
+            .await?;
+        return Ok(());
+    }
+    async fn handle_rand(
+        &self,
+        args: &Vec<String>,
         sender: &SenderType,
     ) -> Result<(), Box<dyn std::error::Error>> {
         if args.len() == 0 {
@@ -119,5 +169,3 @@ impl BotPlugin for SimpleRandPlugin {
         Ok(())
     }
 }
-
-countdown_bot3::export_static_plugin!(PLUGIN_NAME, SimpleRandPlugin::new());
